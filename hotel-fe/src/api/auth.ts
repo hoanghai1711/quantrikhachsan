@@ -1,6 +1,6 @@
 import { User } from '../types/auth';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = process.env.REACT_APP_API_ENDPOINT + '/api';
 const TOKEN_KEY = 'hotel_token';
 
 export const login = async (email: string, password: string): Promise<{ user: User; token: string }> => {

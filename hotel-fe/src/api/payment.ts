@@ -1,6 +1,6 @@
 import { Booking, PaymentMethod } from '../types';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = process.env.REACT_APP_API_ENDPOINT + '/api';
 
 export const makePayment = async (bookingId: number, method: PaymentMethod, amount: number): Promise<Booking> => {
   try {

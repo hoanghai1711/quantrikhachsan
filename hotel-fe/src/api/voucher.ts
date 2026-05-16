@@ -1,6 +1,6 @@
 import { Voucher, VoucherType } from '../types';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = process.env.REACT_APP_API_ENDPOINT + '/api';
 
 export interface CreateVoucherPayload {
   code: string;

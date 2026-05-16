@@ -1,7 +1,7 @@
 import { User, Role } from '../types/auth';
 
 // Dùng relative path (proxy)
-const API_BASE_URL = '/api';
+const API_BASE_URL = process.env.REACT_APP_API_ENDPOINT + '/api';
 
 export const userService = {
   getStaffUsers: async (): Promise<User[]> => {

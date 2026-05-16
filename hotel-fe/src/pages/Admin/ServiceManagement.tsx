@@ -4,7 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaSearch, FaCopy } fr
 import { ServiceItem, ServiceCategory } from '../../types';
 import { showToast } from '../../components/common/ToastNotification';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = process.env.REACT_APP_API_ENDPOINT + '/api';
 
 const ServiceManagement: React.FC = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);

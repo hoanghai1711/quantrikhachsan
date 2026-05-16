@@ -1,6 +1,6 @@
 import { ServiceItem, ServiceCategory } from '../types';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = process.env.REACT_APP_API_ENDPOINT + '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
