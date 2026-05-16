@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Security.Claims;
 using HotelBackend.Hubs;
 using HotelBackend.Models;
 using HotelBackend.Services;
@@ -53,6 +54,13 @@ namespace HotelBackend.Controllers
             return Ok(booking);
         }
 
+        [HttpGet("checked-in")]
+        public async Task<IActionResult> GetCheckedInBookings()
+        {
+            var bookings = await _bookingService.GetCheckedInBookingsAsync();
+            return Ok(bookings);
+        }
+
         [HttpPost("search")]
         [AllowAnonymous]
         public async Task<IActionResult> SearchAvailableRooms([FromBody] SearchRequest request)
@@ -62,26 +70,64 @@ namespace HotelBackend.Controllers
         }
 
         [HttpPost]
-        [AllowAnonymous]
+        [Authorize]
         public async Task<IActionResult> CreateBooking([FromBody] Booking booking)
         {
-            var createdBooking = await _bookingService.CreateBookingAsync(booking);
+            // Lấy UserId từ token và bắt buộc phải có khi user tự đặt phòng
+            var userIdStr = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!int.TryParse(userIdStr, out int userId))
+            {
+                return Unauthorized(new { message = "Vui lòng đăng nhập để đặt phòng." });
+            }
 
-            await _hubContext.Clients.Groups(new[] { "Admin", "Manager" })
-                .SendAsync("ReceiveNotification", new NotificationPayload
-                {
-                    Title = "Đơn đặt phòng mới",
-                    Message = $"Đơn đặt phòng {createdBooking.BookingCode} đã được tạo.",
-                    Type = "success",
-                    Timestamp = DateTime.UtcNow,
-                    RelatedId = createdBooking.Id
-                });
+            booking.UserId = userId;
 
-            return CreatedAtAction(nameof(GetBooking), new { code = createdBooking.BookingCode }, createdBooking);
+            Console.WriteLine($"Received RoomTypeId: {booking.RoomTypeId}, UserId: {booking.UserId}");
+            if (booking.CheckInDate == default || booking.CheckOutDate == default)
+            {
+                return BadRequest(new { message = "Check-in và check-out là bắt buộc" });
+            }
+            if (string.IsNullOrWhiteSpace(booking.GuestPhone))
+            {
+                return BadRequest(new { message = "Số điện thoại là bắt buộc" });
+            }
+            if (string.IsNullOrWhiteSpace(booking.GuestName))
+            {
+                return BadRequest(new { message = "Họ tên là bắt buộc" });
+            }
+            if (string.IsNullOrWhiteSpace(booking.GuestEmail))
+            {
+                return BadRequest(new { message = "Email là bắt buộc" });
+            }
+
+            try
+            {
+                var createdBooking = await _bookingService.CreateBookingAsync(booking);
+
+                await _hubContext.Clients.Groups(new[] { "Admin", "Manager" })
+                    .SendAsync("ReceiveNotification", new NotificationPayload
+                    {
+                        Title = "Đơn đặt phòng mới",
+                        Message = $"Đơn đặt phòng {createdBooking.BookingCode} đã được tạo.",
+                        Type = "success",
+                        Timestamp = DateTime.UtcNow,
+                        RelatedId = createdBooking.Id
+                    });
+
+                return CreatedAtAction(nameof(GetBooking), new { code = createdBooking.BookingCode }, createdBooking);
+            }
+            catch (ArgumentException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
         }
 
         [HttpPost("check-in")]
-        [RequirePermission("booking.checkin")]
+        [Authorize]
         public async Task<IActionResult> CheckIn([FromBody] CheckInRequest request)
         {
             var success = await _bookingService.CheckInAsync(request.BookingId, request.RoomIds);

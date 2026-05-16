@@ -29,7 +29,8 @@ import Checkout from './pages/Receptionist/Checkout';
 import MoMoCallback from './pages/Receptionist/MoMoCallback';
 import RoomCleaning from './pages/Housekeeping/RoomCleaning';
 import ToastNotification from './components/common/ToastNotification';
-
+import CreateBooking from './pages/Receptionist/CreateBooking';
+import ReceptionistRoomList from './pages/Receptionist/ReceptionistRoomList';
 function App() {
   const { user, loading } = useAuth();
 
@@ -47,7 +48,7 @@ function App() {
           element={
             !user || user.role === Role.GUEST ? 
               <GuestHome /> : 
-              <Navigate to={user.role === Role.ADMIN || user.role === Role.MANAGER ? '/dashboard' : '/check-in'} />
+              <Navigate to={user.role === Role.ADMIN || user.role === Role.MANAGER ? '/dashboard' : user.role === Role.HOUSEKEEPING ? '/room-cleaning' : '/check-in'} />
           } 
         />
 
@@ -221,6 +222,7 @@ function App() {
               </ProtectedRoute>
             </MainLayout>
           } 
+
         />
         <Route 
           path="/admin/pos" 
@@ -304,6 +306,26 @@ function App() {
               </ProtectedRoute>
             </MainLayout>
           } 
+        />
+        <Route
+          path="/receptionist/create-booking"
+          element={
+            <MainLayout title="Tạo booking">
+              <ProtectedRoute allowedRoles={[Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST]}>
+                <CreateBooking />
+              </ProtectedRoute>
+            </MainLayout>
+          }
+        />
+        <Route
+          path="/receptionist/rooms"
+          element={
+            <MainLayout title="Danh sách phòng">
+              <ProtectedRoute allowedRoles={[Role.ADMIN, Role.MANAGER, Role.RECEPTIONIST]}>
+                <ReceptionistRoomList />
+              </ProtectedRoute>
+            </MainLayout>
+          }
         />
         <Route 
           path="/check-out" 

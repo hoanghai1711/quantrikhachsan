@@ -1,6 +1,6 @@
 import { Booking, BookingService, RoomType, ServiceItem } from '../types';
 
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -25,7 +25,7 @@ export interface RoomSearchParams {
 
 export const searchRooms = async (params: RoomSearchParams): Promise<RoomType[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/bookings/search`, {
+    const response = await fetch(`${API_BASE_URL}/rooms/available`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -75,28 +75,30 @@ export const getBookingByCode = async (code: string): Promise<Booking | null> =>
   }
 };
 
-export const getBookingByIdentifier = async (value: string, type: 'code' | 'phone'): Promise<Booking | null> => {
-  try {
-    const queryParams = new URLSearchParams({
-      identifier: value,
-      type,
-    });
+export const getBookingByIdentifier = async (identifier: string, type: 'code' | 'phone'): Promise<Booking | null> => {
+  if (type === 'code') {
+    return getBookingByCode(identifier);
+  } else {
+    // For phone search, we need to get all bookings and filter
+    const bookings = await getBookings();
+    return bookings.find(b => b.guestPhone === identifier) || null;
+  }
+};
 
-    const response = await fetch(`${API_BASE_URL}/bookings?${queryParams}`, {
+export const getAvailableRoomsForRoomType = async (roomTypeId: number, checkIn: string, checkOut: string): Promise<any[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/rooms/available/${roomTypeId}?checkIn=${checkIn}&checkOut=${checkOut}`, {
       headers: getAuthHeader(),
     });
 
-    if (response.status === 404) {
-      return null;
-    }
-
     if (!response.ok) {
-      throw new Error('Không thể tìm kiếm booking');
+      throw new Error('Không thể lấy danh sách phòng trống');
     }
 
-    return await response.json();
+    const data = await response.json();
+    return normalizeApiArray(data);
   } catch (error) {
-    console.error('Get booking by identifier error:', error);
+    console.error('Get available rooms error:', error);
     throw error;
   }
 };
@@ -172,6 +174,12 @@ export const createBooking = async (payload: {
   nights: number;
   voucherCode?: string;
 }): Promise<Booking> => {
+  const requestPayload = {
+    ...payload,
+    checkInDate: payload.checkIn,
+    checkOutDate: payload.checkOut,
+  };
+
   try {
     const response = await fetch(`${API_BASE_URL}/bookings`, {
       method: 'POST',
@@ -179,7 +187,7 @@ export const createBooking = async (payload: {
         ...getAuthHeader(),
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify(payload),
+      body: JSON.stringify(requestPayload),
     });
 
     if (!response.ok) {
@@ -208,6 +216,24 @@ export const getBookings = async (): Promise<Booking[]> => {
     return normalizeApiArray<Booking>(data);
   } catch (error) {
     console.error('Get bookings error:', error);
+    throw error;
+  }
+};
+
+export const getCheckedInBookings = async (): Promise<Booking[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/checked-in`, {
+      headers: getAuthHeader(),
+    });
+
+    if (!response.ok) {
+      throw new Error('Không thể lấy danh sách khách đã check-in');
+    }
+
+    const data = await response.json();
+    return normalizeApiArray<Booking>(data);
+  } catch (error) {
+    console.error('Get checked-in bookings error:', error);
     throw error;
   }
 };
@@ -315,6 +341,28 @@ export const getInvoice = async (bookingId: number): Promise<any> => {
   }
 };
 
+export const createRoomKeyCard = async (bookingId: number, roomId: number): Promise<any> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/keycard`, {
+      method: 'POST',
+      headers: {
+        ...getAuthHeader(),
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ roomId }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Không thể tạo thẻ phòng');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Create key card error:', error);
+    throw error;
+  }
+};
+
 export const addServiceToBooking = async (bookingId: number, serviceId: number, quantity: number): Promise<BookingService> => {
   try {
     const response = await fetch(`${API_BASE_URL}/order-services`, {
@@ -379,13 +427,16 @@ export const getRoomTypeById = async (id: number): Promise<RoomType | null> => {
   }
 };
 
-export const getAvailableRooms = async (typeId: number, checkIn: string, checkOut: string) => {
+export const getAvailableRooms = async (typeId: number | null, checkIn: string, checkOut: string) => {
   try {
     const queryParams = new URLSearchParams({
-      roomTypeId: typeId.toString(),
       checkIn,
       checkOut,
     });
+
+    if (typeId !== null) {
+      queryParams.append('roomTypeId', typeId.toString());
+    }
 
     const response = await fetch(`${API_BASE_URL}/rooms/available?${queryParams}`, {
       headers: getAuthHeader(),

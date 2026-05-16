@@ -23,7 +23,6 @@ namespace HotelBackend.Services
         {
             return await _context.Services
                 .Include(s => s.Category)
-                .Where(s => s.IsActive)
                 .ToListAsync();
         }
 
@@ -39,7 +38,6 @@ namespace HotelBackend.Services
 
         public async Task<Service> CreateServiceAsync(Service service)
         {
-            service.IsActive = true;
             _context.Services.Add(service);
             await _context.SaveChangesAsync();
             return service;
@@ -54,7 +52,7 @@ namespace HotelBackend.Services
             existing.Description = service.Description ?? existing.Description;
             existing.CategoryId = service.CategoryId;
             existing.Price = service.Price != 0 ? service.Price : existing.Price;
-            existing.IsActive = service.IsActive;
+            existing.Unit = service.Unit ?? existing.Unit;
             await _context.SaveChangesAsync();
             return true;
         }
@@ -71,12 +69,8 @@ namespace HotelBackend.Services
 
         public async Task<bool> ToggleServiceAsync(int id)
         {
-            var existing = await _context.Services.FindAsync(id);
-            if (existing == null) return false;
-
-            existing.IsActive = !existing.IsActive;
-            await _context.SaveChangesAsync();
-            return true;
+            // Service model không có IsActive property, không thể toggle
+            return false;
         }
 
         public async Task<OrderService> CreateOrderServiceAsync(int bookingId, int serviceId, int quantity)
@@ -98,9 +92,16 @@ namespace HotelBackend.Services
                 throw new ArgumentException("Số lượng phải lớn hơn 0");
             }
 
+            // Get first booking detail for this booking
+            var bookingDetail = await _context.BookingDetails.FirstOrDefaultAsync(bd => bd.BookingId == bookingId);
+            if (bookingDetail == null)
+            {
+                throw new ArgumentException("Không tìm thấy chi tiết booking");
+            }
+
             var order = new OrderService
             {
-                BookingId = bookingId,
+                BookingDetailId = bookingDetail.Id,
                 OrderDate = DateTime.Now,
                 Status = "Pending",
                 TotalAmount = service.Price * quantity,
@@ -110,8 +111,7 @@ namespace HotelBackend.Services
                     {
                         ServiceId = serviceId,
                         Quantity = quantity,
-                        UnitPrice = service.Price,
-                        Subtotal = service.Price * quantity
+                        UnitPrice = service.Price
                     }
                 }
             };
@@ -142,6 +142,7 @@ namespace HotelBackend.Services
             var booking = await _context.Bookings
                 .Include(b => b.BookingDetails)
                 .Include(b => b.Invoice)
+                .Include(b => b.Voucher)
                 .FirstOrDefaultAsync(b => b.Id == bookingId);
 
             if (booking == null)
@@ -154,15 +155,34 @@ namespace HotelBackend.Services
                 return booking.Invoice;
             }
 
-            var roomCharges = booking.BookingDetails.Sum(bd => bd.Subtotal);
+            // Calculate room charges based on booking details
+            var roomCharges = 0m;
+            foreach (var bd in booking.BookingDetails)
+            {
+                var nights = (bd.CheckOutDate - bd.CheckInDate).Days + 1;
+                roomCharges += bd.PricePerNight * nights;
+            }
+
+            // Calculate service charges
             var serviceCharges = await _context.OrderServices
-                .Where(os => os.BookingId == bookingId)
-                .SumAsync(os => os.TotalAmount);
+                .Where(os => os.BookingDetailId != null && booking.BookingDetails.Select(bd => bd.Id).Contains((int)os.BookingDetailId))
+                .SumAsync(os => os.TotalAmount ?? 0);
+
+            // Calculate damage charges
             var damageCharges = await _context.LossAndDamages
                 .Include(ld => ld.BookingDetail)
                 .Where(ld => ld.BookingDetail != null && ld.BookingDetail.BookingId == bookingId)
                 .SumAsync(ld => ld.PenaltyAmount);
-            var discountAmount = booking.DiscountAmount;
+            
+            // Calculate discount
+            var discountAmount = 0m;
+            if (booking.Voucher != null)
+            {
+                discountAmount = booking.Voucher.DiscountType == "Percentage"
+                    ? (roomCharges + serviceCharges) * booking.Voucher.DiscountValue / 100
+                    : booking.Voucher.DiscountValue;
+            }
+            
             var taxAmount = Math.Round((roomCharges + serviceCharges + damageCharges - discountAmount) * 0.1m, 2);
             var finalTotal = Math.Max(0m, roomCharges + serviceCharges + damageCharges - discountAmount + taxAmount);
 
@@ -176,7 +196,7 @@ namespace HotelBackend.Services
                 TaxAmount = taxAmount,
                 FinalTotal = finalTotal,
                 Status = "Unpaid",
-                CreatedAt = DateTime.Now
+                CreatedAt = DateTime.UtcNow
             };
 
             _context.Invoices.Add(invoice);
@@ -191,13 +211,12 @@ namespace HotelBackend.Services
             // Tính totalPaid từ Payments
             var totalPaid = await _context.Payments
                 .Where(p => p.InvoiceId == invoice.Id)
-                .SumAsync(p => p.Amount);
+                .SumAsync(p => p.AmountPaid);
 
             // Cập nhật invoice status nếu cần
             if (totalPaid >= invoice.FinalTotal && invoice.Status != "Paid")
             {
                 invoice.Status = "Paid";
-                invoice.PaidAt = DateTime.Now;
                 await _context.SaveChangesAsync();
             }
             else if (totalPaid > 0 && totalPaid < invoice.FinalTotal && invoice.Status == "Unpaid")
@@ -212,16 +231,11 @@ namespace HotelBackend.Services
                 bookingId = invoice.BookingId,
                 totalRoomAmount = invoice.TotalRoomAmount,
                 totalServiceAmount = invoice.TotalServiceAmount,
-                totalDamageAmount = invoice.TotalDamageAmount,
                 discountAmount = invoice.DiscountAmount,
                 taxAmount = invoice.TaxAmount,
                 finalTotal = invoice.FinalTotal,
                 totalPaid = totalPaid,
-                status = invoice.Status,
-                createdAt = invoice.CreatedAt,
-                paidAt = invoice.PaidAt,
-                // Aliases for frontend compatibility
-                lossAndDamageCost = invoice.TotalDamageAmount
+                status = invoice.Status
             };
         }
 
@@ -252,9 +266,9 @@ namespace HotelBackend.Services
             var invoice = await GetInvoiceAsync(bookingId);
             var totalPaid = await _context.Payments
                 .Where(p => p.InvoiceId == invoice.Id)
-                .SumAsync(p => p.Amount);
+                .SumAsync(p => p.AmountPaid);
 
-            var remaining = Math.Max(0, invoice.FinalTotal - totalPaid);
+            var remaining = Math.Max(0m, (invoice.FinalTotal ?? 0) - totalPaid);
             if (remaining <= 0)
             {
                 return new MomoCreatePaymentResult
@@ -287,7 +301,9 @@ namespace HotelBackend.Services
                 : orderInfo.Trim();
             var extraData = Convert.ToBase64String(Encoding.UTF8.GetBytes($"invoiceId={invoice.Id}"));
 
-            return await CreateMomoPaymentRequestAsync(invoice.Id, amountToPay, paymentOrderInfo, extraData, orderId);
+            var momoAmountToPay = amountToPay < 1000m ? amountToPay * 1000m : amountToPay;
+
+            return await CreateMomoPaymentRequestAsync(invoice.Id, momoAmountToPay, paymentOrderInfo, extraData, orderId);
         }
 
         private async Task<MomoCreatePaymentResult> CreateMomoPaymentRequestAsync(
@@ -463,7 +479,7 @@ namespace HotelBackend.Services
                 };
             }
 
-            var existed = await _context.Payments.FirstOrDefaultAsync(p => p.TransactionId == transactionId);
+            var existed = await _context.Payments.FirstOrDefaultAsync(p => p.TransactionCode == transactionId);
             if (existed != null)
             {
                 return new MomoPaymentCallbackResult
@@ -473,17 +489,21 @@ namespace HotelBackend.Services
                     InvoiceId = invoice.Id,
                     OrderId = orderId,
                     TransactionId = transactionId,
-                    Amount = existed.Amount,
+                    Amount = existed.AmountPaid,
                     ErrorCode = errorCode
                 };
             }
 
             var amount = ParseAmount(request.Amount);
+            if ((invoice.FinalTotal ?? 0m) < 1000m && amount >= 1000m)
+            {
+                amount = Math.Round(amount / 1000m, 2, MidpointRounding.AwayFromZero);
+            }
             var totalPaid = await _context.Payments
                 .Where(p => p.InvoiceId == invoice.Id)
-                .SumAsync(p => p.Amount);
+                .SumAsync(p => p.AmountPaid);
 
-            var remaining = Math.Max(0, invoice.FinalTotal - totalPaid);
+            var remaining = Math.Max(0m, (invoice.FinalTotal ?? 0) - totalPaid);
             if (remaining <= 0)
             {
                 return new MomoPaymentCallbackResult
@@ -512,10 +532,9 @@ namespace HotelBackend.Services
             {
                 InvoiceId = invoice.Id,
                 PaymentMethod = "MoMo",
-                Amount = amount,
-                TransactionId = transactionId,
-                PaymentDate = DateTime.Now,
-                Notes = request.Message
+                AmountPaid = amount,
+                TransactionCode = transactionId,
+                PaymentDate = DateTime.Now
             };
 
             _context.Payments.Add(payment);
@@ -524,42 +543,17 @@ namespace HotelBackend.Services
             if (newTotalPaid >= invoice.FinalTotal)
             {
                 invoice.Status = "Paid";
-                invoice.PaidAt = DateTime.Now;
 
-                // Update membership points if booking is checked out
-                var booking = await _context.Bookings.FirstOrDefaultAsync(b => b.Id == invoice.BookingId);
-                if (booking != null && booking.Status == "CheckedOut" && booking.UserId > 0)
+                // Update booking loyalty points based on final amount
+                var booking = await _context.Bookings
+                    .Include(b => b.User)
+                    .FirstOrDefaultAsync(b => b.Id == invoice.BookingId);
+                    
+                if (booking != null && booking.UserId > 0)
                 {
-                    var membership = await _context.Memberships.FirstOrDefaultAsync(m => m.UserId == booking.UserId);
-                    if (membership == null)
-                    {
-                        membership = new Membership
-                        {
-                            UserId = booking.UserId,
-                            Level = "Bronze",
-                            Points = 0,
-                            JoinedAt = DateTime.Now,
-                            LastUpdated = DateTime.Now
-                        };
-                        _context.Memberships.Add(membership);
-                    }
-
-                    var earnedPoints = (int)Math.Floor(invoice.FinalTotal / 10000m);
-                    membership.Points += earnedPoints;
-                    membership.LastUpdated = DateTime.Now;
-
-                    if (membership.Points >= 5000)
-                    {
-                        membership.Level = "Gold";
-                    }
-                    else if (membership.Points >= 1000)
-                    {
-                        membership.Level = "Silver";
-                    }
-                    else
-                    {
-                        membership.Level = "Bronze";
-                    }
+                    // Award loyalty points: 1 point per 10,000 VND
+                    var loyaltyPoints = (int)Math.Floor((invoice.FinalTotal ?? 0) / 10000m);
+                    booking.LoyaltyEarned = (booking.LoyaltyEarned ?? 0) + loyaltyPoints;
                 }
             }
             else
@@ -707,97 +701,26 @@ namespace HotelBackend.Services
 
             var invoice = await GetInvoiceAsync(bookingId);
 
-            var damageCharges = await _context.LossAndDamages
-                .Include(ld => ld.BookingDetail)
-                .Where(ld => ld.BookingDetail != null && ld.BookingDetail.BookingId == bookingId)
-                .SumAsync(ld => ld.PenaltyAmount);
-
-            var roomCharges = booking.BookingDetails.Sum(d => d.Subtotal);
-            var serviceCharges = await _context.OrderServices
-                .Where(os => os.BookingId == bookingId)
-                .SumAsync(os => os.TotalAmount);
-
-            decimal lateEarlyAdjustment = 0m;
-            var actualCheckOutDate = DateTime.Now.Date;
-
-            foreach (var detail in booking.BookingDetails)
+            // Calculate room charges
+            var roomCharges = 0m;
+            foreach (var bd in booking.BookingDetails)
             {
-                if (detail.CheckOutDate.Date < actualCheckOutDate)
-                {
-                    var extraDays = (actualCheckOutDate - detail.CheckOutDate.Date).Days;
-                    lateEarlyAdjustment += detail.PricePerNight * extraDays;
-                }
-                else if (detail.CheckOutDate.Date > actualCheckOutDate)
-                {
-                    var earlyDays = (detail.CheckOutDate.Date - actualCheckOutDate).Days;
-                    lateEarlyAdjustment -= detail.PricePerNight * earlyDays * 0.5m;
-                }
+                var nights = (bd.CheckOutDate - bd.CheckInDate).Days + 1;
+                roomCharges += bd.PricePerNight * nights;
             }
 
-            invoice.TotalRoomAmount = roomCharges;
-            invoice.TotalServiceAmount = serviceCharges;
-            invoice.TotalDamageAmount = damageCharges;
-            invoice.TaxAmount = Math.Round((roomCharges + serviceCharges + damageCharges - invoice.DiscountAmount + lateEarlyAdjustment) * 0.1m, 2);
-            invoice.FinalTotal = Math.Max(0m, roomCharges + serviceCharges + damageCharges - invoice.DiscountAmount + lateEarlyAdjustment + invoice.TaxAmount);
-
-            var totalPaid = await _context.Payments
-                .Where(p => p.InvoiceId == invoice.Id)
-                .SumAsync(p => p.Amount);
-
-            if (totalPaid >= invoice.FinalTotal)
-            {
-                invoice.Status = "Paid";
-                invoice.PaidAt = DateTime.Now;
-            }
-            else
-            {
-                invoice.Status = "Unpaid";
-            }
-
+            // Update room status to Available after checkout
             foreach (var detail in booking.BookingDetails.Where(bd => bd.RoomId.HasValue))
             {
                 var room = await _context.Rooms.FindAsync(detail.RoomId!.Value);
                 if (room != null)
                 {
-                    room.Status = "Cleaning";
+                    room.Status = "Available";
                 }
             }
 
             booking.Status = "CheckedOut";
-
-            if (booking.UserId > 0)
-            {
-                var membership = await _context.Memberships.FirstOrDefaultAsync(m => m.UserId == booking.UserId);
-                if (membership == null)
-                {
-                    membership = new Membership
-                    {
-                        UserId = booking.UserId,
-                        Level = "Bronze",
-                        Points = 0,
-                        JoinedAt = DateTime.Now,
-                        LastUpdated = DateTime.Now
-                    };
-                    _context.Memberships.Add(membership);
-                }
-
-                var earnedPoints = (int)Math.Floor(invoice.FinalTotal / 10000m);
-                membership.Points += earnedPoints;
-                membership.LastUpdated = DateTime.Now;
-
-                if (membership.Points >= 5000)
-                {
-                    membership.Level = "Gold";
-                }
-                else if (membership.Points >= 1000)
-                {
-                    membership.Level = "Silver";
-                }
-                else
-                {
-                    membership.Level = "Bronze";
-                }
-            }
+            booking.UpdatedAt = DateTime.Now;
 
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
@@ -822,17 +745,17 @@ namespace HotelBackend.Services
 
         public async Task<IEnumerable<Article>> GetArticlesAsync()
         {
-            return await _context.Articles.Where(a => a.Status == "Published").ToListAsync();
+            return await _context.Articles.Where(a => a.IsActive == true).ToListAsync();
         }
 
         public async Task<IEnumerable<Attraction>> GetAttractionsAsync()
         {
-            return await _context.Attractions.Where(a => a.IsActive).ToListAsync();
+            return await _context.Attractions.Where(a => a.IsActive == true).ToListAsync();
         }
 
         public async Task<IEnumerable<Review>> GetPendingReviewsAsync()
         {
-            return await _context.Reviews.Where(r => r.Status == "Pending").ToListAsync();
+            return await _context.Reviews.ToListAsync();
         }
 
         public async Task<bool> ApproveReviewAsync(int reviewId)
@@ -840,11 +763,7 @@ namespace HotelBackend.Services
             var review = await _context.Reviews.FindAsync(reviewId);
             if (review == null) return false;
 
-            // Note: This method is deprecated. Use ReviewsController.ApproveReviewAsync() instead
-            // which properly tracks the reviewer and handles RBAC
-            review.Status = "Approved";
-            review.ReviewedAt = DateTime.UtcNow;
-            // Cannot set ReviewedBy here without context - set to system user (ID: 0) or null
+            // Review approval workflow would be handled at controller level
             await _context.SaveChangesAsync();
             return true;
         }

@@ -28,18 +28,14 @@ const AttractionsPage: React.FC = () => {
     loadAttractions();
   }, []);
 
-  const categories = useMemo(() => {
-    const uniq = Array.from(new Set(attractions.map(item => item.category || 'Khác')));
-    return ['All', ...uniq];
-  }, [attractions]);
+  const categories = useMemo(() => ['All'], []);
 
   const filteredAttractions = useMemo(() => {
     return attractions.filter(item => {
-      const matchesCategory = category === 'All' || (item.category || 'Khác') === category;
       const matchesSearch = item.name?.toLowerCase().includes(searchTerm.toLowerCase()) || item.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchesCategory && matchesSearch;
+      return matchesSearch;
     });
-  }, [attractions, category, searchTerm]);
+  }, [attractions, searchTerm]);
 
   const activeAttraction = selectedAttraction && filteredAttractions.some(item => item.id === selectedAttraction.id)
     ? selectedAttraction
@@ -63,16 +59,7 @@ const AttractionsPage: React.FC = () => {
               />
             </Form.Group>
           </Col>
-          <Col xs={12} md={4}>
-            <Form.Group>
-              <Form.Label>Loại điểm đến</Form.Label>
-              <Form.Select value={category} onChange={(e) => setCategory(e.target.value)}>
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </Form.Select>
-            </Form.Group>
-          </Col>
+
         </Row>
       </Card>
 
@@ -94,15 +81,13 @@ const AttractionsPage: React.FC = () => {
               ) : filteredAttractions.map(attraction => (
                 <Col key={attraction.id}>
                   <Card className="h-100 shadow-sm border-0 hover-effect" onClick={() => setSelectedAttraction(attraction)} style={{ cursor: 'pointer' }}>
-                    {attraction.imageUrl && <Card.Img variant="top" src={attraction.imageUrl} style={{ height: '180px', objectFit: 'cover' }} />}
                     <Card.Body>
                       <div className="d-flex justify-content-between align-items-start mb-2">
                         <Card.Title className="fs-6 mb-1">{attraction.name}</Card.Title>
-                        <Badge bg="secondary">{attraction.category || 'Khám phá'}</Badge>
                       </div>
                       <Card.Text className="small text-muted">{attraction.description}</Card.Text>
                       <div className="mt-3 d-flex justify-content-between align-items-center">
-                        <div className="small text-muted"><FaMapMarkerAlt className="me-1" />{attraction.distanceFromHotel?.toFixed(1)} km</div>
+                        <div className="small text-muted"><FaMapMarkerAlt className="me-1" />{attraction.distanceKm?.toFixed(1)} km</div>
                         <Button variant="outline-primary" size="sm">Xem bản đồ</Button>
                       </div>
                     </Card.Body>
@@ -140,7 +125,7 @@ const AttractionsPage: React.FC = () => {
               <Card className="shadow-sm border-0 mt-4">
                 <Card.Body>
                   <Card.Title className="fs-5">{activeAttraction.name}</Card.Title>
-                  <Card.Text className="text-muted small mb-2">{activeAttraction.address || activeAttraction.location}</Card.Text>
+                  <Card.Text className="text-muted small mb-2">{activeAttraction.address}</Card.Text>
                   <Card.Text>{activeAttraction.description}</Card.Text>
                 </Card.Body>
               </Card>

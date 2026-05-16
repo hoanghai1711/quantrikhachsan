@@ -19,6 +19,7 @@ namespace HotelBackend.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetServices()
         {
             var services = await _serviceService.GetServicesAsync();
@@ -30,12 +31,13 @@ namespace HotelBackend.Controllers
                 name = s.Name,
                 description = s.Description,
                 price = s.Price,
-                isActive = s.IsActive
+                unit = s.Unit
             }).ToList();
             return Ok(result);
         }
 
         [HttpGet("categories")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetServiceCategories()
         {
             var categories = await _serviceService.GetServiceCategoriesAsync();
@@ -48,6 +50,7 @@ namespace HotelBackend.Controllers
         }
 
         [HttpGet("{id:int}")]
+        [AllowAnonymous]
         public async Task<IActionResult> GetService(int id)
         {
             var service = await _serviceService.GetServiceByIdAsync(id);

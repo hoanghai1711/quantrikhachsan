@@ -65,6 +65,11 @@ const RoomDetailPage: React.FC = () => {
     }).format(amount);
   };
 
+  const availableCount = roomType.rooms
+    ? roomType.rooms.filter(r => r?.status?.toLowerCase() === 'available').length
+    : null;
+  const isAvailable = availableCount === null ? !!roomType.isActive : availableCount > 0;
+
   return (
     <div className="container py-4">
       {/* Header */}
@@ -127,8 +132,10 @@ const RoomDetailPage: React.FC = () => {
                   <span>Diện tích: <strong>{roomType.size} m²</strong></span>
                 </div>
                 <div className="d-flex align-items-center mb-3">
-                  <Badge bg={roomType.isActive ? 'success' : 'secondary'} className="me-2">
-                    {roomType.isActive ? 'Còn trống' : 'Không khả dụng'}
+                  <Badge bg={isAvailable ? 'success' : 'secondary'} className="me-2">
+                    {availableCount === null
+                      ? (isAvailable ? 'Còn trống' : 'Không khả dụng')
+                      : (isAvailable ? `Còn ${availableCount} phòng` : 'Hết phòng')}
                   </Badge>
                 </div>
               </div>
@@ -146,7 +153,7 @@ const RoomDetailPage: React.FC = () => {
                 size="lg"
                 className="w-100"
                 onClick={() => navigate(`/book/${roomType.id}`)}
-                disabled={!roomType.isActive}
+                disabled={!isAvailable}
               >
                 <FaCalendarAlt className="me-2" />
                 Đặt phòng ngay

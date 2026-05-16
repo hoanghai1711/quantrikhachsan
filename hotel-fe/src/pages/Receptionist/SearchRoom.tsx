@@ -1,8 +1,17 @@
 import React, { useState } from 'react';
-import { Row, Col, Card, Button, Form } from 'react-bootstrap';
+import { Row, Col, Card, Button, Form, Badge } from 'react-bootstrap';
 import { searchAvailableRooms } from '../../api/rooms';
 import { Room } from '../../types';
 import { useNavigate } from 'react-router-dom';
+
+interface RoomTypeGroup {
+  roomTypeId: number;
+  typeName: string;
+  description: string;
+  price: number;
+  image: string;
+  availableCount: number;
+}
 
 const SearchRoom: React.FC = () => {
   const navigate = useNavigate();
@@ -11,10 +20,42 @@ const SearchRoom: React.FC = () => {
   const [adults, setAdults] = useState(2);
   const [children, setChildren] = useState(0);
   const [results, setResults] = useState<Room[]>([]);
+  const [groupedResults, setGroupedResults] = useState<RoomTypeGroup[]>([]);
 
   const handleSearch = async () => {
     const data = await searchAvailableRooms({ checkIn, checkOut });
-    setResults(Array.isArray(data) ? data : []);
+    const rooms = Array.isArray(data) ? data : [];
+    setResults(rooms);
+
+    // Group by roomTypeId
+    const grouped = rooms.reduce((acc, room) => {
+      const tid = room.roomTypeId;
+      if (!tid) return acc;
+
+      if (!acc[tid]) {
+        const rt = room.roomType;
+        acc[tid] = {
+          roomTypeId: tid,
+          typeName: rt?.name || `Hạng phòng ${tid}`,
+          description: rt?.description || `Chi tiết hạng phòng ${tid}`,
+          price: rt?.basePrice || 0,
+          image: rt?.slug 
+            ? (rt.slug.startsWith('http://') || rt.slug.startsWith('https://') 
+                ? rt.slug 
+                : `/images/rooms/${rt.slug}.jpg`) 
+            : rt?.roomImages?.[0]?.imageUrl || '',
+          availableCount: 0
+        };
+      }
+      
+      // Chỉ đếm nếu trạng thái là available
+      if (room.status && room.status.toLowerCase() === 'available') {
+        acc[tid].availableCount += 1;
+      }
+      return acc;
+    }, {} as Record<number, RoomTypeGroup>);
+
+    setGroupedResults(Object.values(grouped));
   };
 
   return (
@@ -30,18 +71,26 @@ const SearchRoom: React.FC = () => {
         </Row>
       </Card.Body></Card>
       <Row className="g-4">
-        {(Array.isArray(results) ? results : []).map(room => (
-          <Col md={4} key={room.id}>
+        {groupedResults.map(roomType => (
+          <Col md={4} key={roomType.roomTypeId}>
             <Card className="h-100 shadow-sm">
-              {room.roomType?.roomImages && room.roomType.roomImages.length > 0 && (
-                <Card.Img variant="top" src={room.roomType.roomImages[0].imageUrl} />
+              {roomType.image && (
+                <Card.Img variant="top" src={roomType.image} />
               )}
               <Card.Body>
-                <Card.Title>{room.roomType?.name || `Phòng ${room.roomNumber}`}</Card.Title>
-                <Card.Text>{room.roomType?.description || `Phòng số ${room.roomNumber}`}</Card.Text>
+                <Card.Title>{roomType.typeName}</Card.Title>
+                <Card.Text>{roomType.description}</Card.Text>
+                <div className="mb-2">
+                  <Badge bg="success" className="me-2">{roomType.availableCount} phòng trống</Badge>
+                  {roomType.availableCount <= 3 && (
+                    <Badge bg="warning" text="dark">
+                      ⚠️ Chỉ còn {roomType.availableCount} phòng
+                    </Badge>
+                  )}
+                </div>
                 <div className="d-flex justify-content-between align-items-center">
-                  <strong>{room.roomType?.basePrice?.toLocaleString() ?? 0} VND/đêm</strong>
-                  <Button variant="primary" onClick={() => navigate(`/book/${room.roomTypeId}`)}>Đặt ngay</Button>
+                  <strong>{roomType.price.toLocaleString()} VND/đêm</strong>
+                  <Button variant="primary" onClick={() => navigate(`/book/${roomType.roomTypeId}`)}>Đặt ngay</Button>
                 </div>
               </Card.Body>
             </Card>

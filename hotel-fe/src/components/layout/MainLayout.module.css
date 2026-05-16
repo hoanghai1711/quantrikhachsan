@@ -37,4 +37,105 @@
   .pageContent {
     margin-left: 0;
   }
+  /* Sidebar container */
+.sidebarContainer {
+  width: 260px;
+  transition: width 0.3s ease, transform 0.3s ease;
+  background: linear-gradient(180deg, #1e2a3a 0%, #0f1724 100%);
+  box-shadow: 2px 0 12px rgba(0, 0, 0, 0.1);
+  overflow-x: hidden;
+}
+
+.sidebarCollapsed {
+  width: 70px;
+}
+
+/* Header */
+.header {
+  background: rgba(255, 255, 255, 0.03);
+  backdrop-filter: blur(4px);
+}
+
+.text-gradient {
+  background: linear-gradient(135deg, #ffd89b, #c7e9fb);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Toggle button */
+.toggleBtn {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #fff;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.toggleBtn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* NavLink styles */
+.navLink {
+  color: #cdd9f4;
+  font-weight: 500;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.navLink:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  transform: translateX(4px);
+}
+
+.navLink.active {
+  background: linear-gradient(95deg, #2c3e50, #1a2632);
+  color: #ffd966;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  border-left: 3px solid #ffc107;
+}
+
+.icon {
+  transition: transform 0.2s ease;
+}
+
+.navLink:hover .icon {
+  transform: scale(1.1);
+}
+
+.active .icon {
+  color: #ffc107;
+}
+
+.label {
+  white-space: nowrap;
+}
+
+/* Mobile offcanvas */
+.mobileOffcanvas .offcanvas-header {
+  background: #0f1724;
+  color: white;
+}
+
+.mobileOffcanvas .btn-close {
+  filter: invert(1);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sidebarContainer {
+    transform: translateX(-100%);
+    position: fixed;
+  }
+  
+  /* Khi muốn hiển thị mobile sidebar thì dùng class show-mobile, nhưng bạn đã dùng Offcanvas riêng nên có thể bỏ qua */
+}
 }

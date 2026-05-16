@@ -59,13 +59,28 @@ if (!Array.isArray(usersArray)) {
     }
   };
 
+  const getRoleDisplayName = (role: Role): string => {
+    switch (role) {
+      case Role.ADMIN: return 'Admin';
+      case Role.MANAGER: return 'Quản lý';
+      case Role.RECEPTIONIST: return 'Lễ tân';
+      case Role.HOUSEKEEPING: return 'Buồng phòng';
+      case Role.GUEST: return 'Khách';
+      default: return role;
+    }
+  };
+
+  const getRoleFilterValue = (role: Role): string => {
+    return role.toLowerCase();
+  };
+
   const toggleStatus = (id: number) => {
     setStaff(prev => prev.map(s => s.id === id ? { ...s, status: s.status === 'active' ? 'inactive' : 'active' } : s));
     showToast('success', 'Đã thay đổi trạng thái');
   };
 
   const filtered = staff.filter(s =>
-    (roleFilter === 'all' || s.role === roleFilter) &&
+    (roleFilter === 'all' || getRoleFilterValue(s.role) === roleFilter) &&
     (s.fullName.toLowerCase().includes(search.toLowerCase()) || s.email.toLowerCase().includes(search.toLowerCase()))
   );
   const totalPages = Math.ceil(filtered.length / itemsPerPage);
@@ -117,11 +132,13 @@ if (!Array.isArray(usersArray)) {
                 <tr key={s.id}>
                   <td><FaUserCog className="me-2 text-primary" />{s.fullName}</td>
                   <td>{s.email}</td>
-                  <td><Badge bg="secondary">{s.role}</Badge></td>
+                  <td><Badge bg="secondary">{getRoleDisplayName(s.role)}</Badge></td>
                   <td>
                     <Form.Select size="sm" value={s.role} onChange={e => handleRoleChange(s.id, e.target.value as Role)} style={{ width: 130 }}>
-                      <option value="receptionist">Lễ tân</option><option value="housekeeping">Buồng phòng</option>
-                      <option value="manager">Quản lý</option><option value="admin">Admin</option>
+                      <option value={Role.RECEPTIONIST}>Lễ tân</option>
+                      <option value={Role.HOUSEKEEPING}>Buồng phòng</option>
+                      <option value={Role.MANAGER}>Quản lý</option>
+                      <option value={Role.ADMIN}>Admin</option>
                     </Form.Select>
                   </td>
                   <td><Badge bg={s.status === 'active' ? 'success' : 'secondary'}>{s.status === 'active' ? 'Hoạt động' : 'Không hoạt động'}</Badge></td>

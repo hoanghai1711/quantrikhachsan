@@ -19,6 +19,9 @@ namespace HotelBackend.Services
         {
             return await _context.RoomTypes
                 .Include(rt => rt.RoomImages)
+                .Include(rt => rt.RoomAmenities)
+                    .ThenInclude(ra => ra.Amenity)
+                .Include(rt => rt.Rooms)
                 .ToListAsync();
         }
 
@@ -66,6 +69,10 @@ namespace HotelBackend.Services
         {
             return await _context.Rooms
                 .Include(r => r.RoomType)
+                    .ThenInclude(rt => rt.RoomImages)
+                .Include(r => r.RoomType)
+                    .ThenInclude(rt => rt.RoomAmenities)
+                        .ThenInclude(ra => ra.Amenity)
                 .ToListAsync();
         }
 
@@ -132,7 +139,7 @@ namespace HotelBackend.Services
 
         public async Task<IEnumerable<Room>> GetCleaningRoomsAsync()
         {
-            var now = DateTime.Now;
+            var now = DateTime.UtcNow;
             var cleaningRoomIds = await _context.BookingDetails
                 .Where(bd => bd.RoomId.HasValue && bd.CheckOutDate <= now)
                 .Where(bd => bd.Booking != null && bd.Booking.Status != "Cancelled")
@@ -143,13 +150,20 @@ namespace HotelBackend.Services
             return await _context.Rooms
                 .Include(r => r.RoomType)
                 .Include(r => r.BookingDetails)
-                .Where(r => r.Status == "Cleaning" || (r.Status == "Occupied" && cleaningRoomIds.Contains(r.Id)))
+                .Where(r => 
+                    (r.Status != null && r.Status.ToLower() == "cleaning") || 
+                    (r.CleaningStatus != null && r.CleaningStatus.ToLower() == "dirty") || 
+                    (r.Status != null && r.Status.ToLower() == "occupied" && cleaningRoomIds.Contains(r.Id)))
                 .ToListAsync();
         }
 
         public async Task<IEnumerable<Room>> GetAvailableRoomsAsync(DateTime checkIn, DateTime checkOut, int? roomTypeId = null, decimal? minPrice = null, decimal? maxPrice = null, int? quantity = null)
         {
-            if (checkIn >= checkOut)
+            // 1. Chuẩn hóa về UTC Midnight (tránh bị lệch múi giờ làm lùi ngày)
+            var adjustedCheckIn = new DateTimeOffset(checkIn.Date, TimeSpan.Zero);
+            var adjustedCheckOut = new DateTimeOffset(checkOut.Date, TimeSpan.Zero);
+
+            if (adjustedCheckIn >= adjustedCheckOut)
             {
                 throw new ArgumentException("Ngày đến phải trước ngày đi");
             }
@@ -158,7 +172,7 @@ namespace HotelBackend.Services
 
             var bookedRoomIds = await _context.BookingDetails
                 .Where(bd => bd.RoomId.HasValue)
-                .Where(bd => bd.CheckInDate < checkOut && bd.CheckOutDate > checkIn)
+                .Where(bd => bd.CheckInDate < adjustedCheckOut && bd.CheckOutDate > adjustedCheckIn)
                 .Where(bd => bd.Booking != null && bd.Booking.Status != "Cancelled")
                 .Select(bd => bd.RoomId!.Value)
                 .Distinct()
@@ -169,7 +183,7 @@ namespace HotelBackend.Services
                     .ThenInclude(rt => rt.RoomImages)
                 .Include(r => r.RoomType!)
                     .ThenInclude(rt => rt.RoomAmenities)
-                .Where(r => r.Status == "Available" && !bookedRoomIds.Contains(r.Id));
+                .Where(r => r.Status != null && r.Status.ToLower() == "available" && !bookedRoomIds.Contains(r.Id));
 
             if (roomTypeId.HasValue)
             {
@@ -263,6 +277,10 @@ namespace HotelBackend.Services
 
         public async Task<RoomHold> CreateRoomHoldAsync(int roomTypeId, DateTime checkIn, DateTime checkOut)
         {
+            // 1. Chuẩn hóa về UTC Midnight (tránh bị lệch múi giờ làm lùi ngày)
+            var adjustedCheckIn = new DateTimeOffset(checkIn.Date, TimeSpan.Zero);
+            var adjustedCheckOut = new DateTimeOffset(checkOut.Date, TimeSpan.Zero);
+
             // Check if room type exists
             var roomType = await _context.RoomTypes.FindAsync(roomTypeId);
             if (roomType == null)
@@ -271,14 +289,14 @@ namespace HotelBackend.Services
             // Check availability (similar to GetAvailableRoomsAsync)
             var bookedRoomIds = await _context.BookingDetails
                 .Where(bd => bd.RoomId.HasValue)
-                .Where(bd => bd.CheckInDate < checkOut && bd.CheckOutDate > checkIn)
+                .Where(bd => bd.CheckInDate < adjustedCheckOut && bd.CheckOutDate > adjustedCheckIn)
                 .Where(bd => bd.Booking != null && bd.Booking.Status != "Cancelled")
                 .Select(bd => bd.RoomId!.Value)
                 .Distinct()
                 .ToListAsync();
 
             var availableRooms = await _context.Rooms
-                .Where(r => r.RoomTypeId == roomTypeId && r.Status == "Available" && !bookedRoomIds.Contains(r.Id))
+                .Where(r => r.RoomTypeId == roomTypeId && r.Status != null && r.Status.ToLower() == "available" && !bookedRoomIds.Contains(r.Id))
                 .ToListAsync();
 
             if (!availableRooms.Any())
@@ -287,7 +305,7 @@ namespace HotelBackend.Services
             // Check existing holds
             var conflictingHolds = await _context.RoomHolds
                 .Where(h => h.RoomTypeId == roomTypeId)
-                .Where(h => h.CheckIn < checkOut && h.CheckOut > checkIn)
+                .Where(h => h.CheckIn < adjustedCheckOut && h.CheckOut > adjustedCheckIn)
                 .Where(h => h.HoldExpiry > DateTime.UtcNow)
                 .ToListAsync();
 
@@ -297,8 +315,8 @@ namespace HotelBackend.Services
             var hold = new RoomHold
             {
                 RoomTypeId = roomTypeId,
-                CheckIn = checkIn,
-                CheckOut = checkOut,
+                CheckIn = adjustedCheckIn,
+                CheckOut = adjustedCheckOut,
                 HoldExpiry = DateTime.UtcNow.AddMinutes(15),
                 CreatedAt = DateTime.UtcNow
             };

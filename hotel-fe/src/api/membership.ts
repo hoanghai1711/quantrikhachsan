@@ -1,4 +1,4 @@
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = '/api';
 
 export interface Membership {
   id: number;
@@ -38,19 +38,25 @@ export const getMembership = async (): Promise<Membership> => {
   return response.json();
 };
 
+// Note: Backend không có endpoint /membership/transactions
+// Sử dụng hàm này khi backend implementation đã sẵn sàng
 export const getMembershipTransactions = async (): Promise<Transaction[]> => {
-  const token = localStorage.getItem('hotel_token');
-  const response = await fetch(`${API_BASE_URL}/membership/transactions`, {
-    method: 'GET',
-    headers: {
-      Authorization: `Bearer ${token}`,
-      'Content-Type': 'application/json',
-    },
-  });
-
-  if (!response.ok) {
-    throw new Error('Không thể tải lịch sử giao dịch');
-  }
-
-  return response.json();
+  // Tạm thời trả về mảng rỗng
+  return [];
+  
+  // Khi backend có sẵn endpoint, uncomment đoạn sau:
+  // const token = localStorage.getItem('hotel_token');
+  // const response = await fetch(`${API_BASE_URL}/membership/transactions`, {
+  //   method: 'GET',
+  //   headers: {
+  //     Authorization: `Bearer ${token}`,
+  //     'Content-Type': 'application/json',
+  //   },
+  // });
+  //
+  // if (!response.ok) {
+  //   throw new Error('Không thể tải lịch sử giao dịch');
+  // }
+  //
+  // return response.json();
 };

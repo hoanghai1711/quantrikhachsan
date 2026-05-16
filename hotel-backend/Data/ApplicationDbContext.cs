@@ -17,6 +17,7 @@ namespace HotelBackend.Data
         public DbSet<Role> Roles { get; set; }
         public DbSet<Permission> Permissions { get; set; }
         public DbSet<RolePermission> RolePermissions { get; set; }
+        public DbSet<Membership> Memberships { get; set; }
 
         // Rooms
         public DbSet<RoomType> RoomTypes { get; set; }
@@ -51,8 +52,8 @@ namespace HotelBackend.Data
         public DbSet<Equipment> Equipments { get; set; }
         public DbSet<RoomInventory> RoomInventories { get; set; }
 
-        // Membership
-        public DbSet<Membership> Memberships { get; set; }
+        // Notifications
+        public DbSet<Notification> Notifications { get; set; }
 
         // Vouchers and Audit
         public DbSet<Voucher> Vouchers { get; set; }
@@ -71,17 +72,27 @@ namespace HotelBackend.Data
                 entity.Property(e => e.Name).HasColumnName("name");
                 entity.Property(e => e.Description).HasColumnName("description");
                 entity.Property(e => e.Price).HasColumnName("price");
-                entity.Property(e => e.IsActive).HasColumnName("is_active");
+                entity.Property(e => e.Unit).HasColumnName("unit");
             });
 
             // Column name mappings for OrderService (snake_case)
             modelBuilder.Entity<OrderService>(entity =>
             {
                 entity.Property(e => e.Id).HasColumnName("id");
-                entity.Property(e => e.BookingId).HasColumnName("booking_id");
+                entity.Property(e => e.BookingDetailId).HasColumnName("booking_detail_id");
                 entity.Property(e => e.OrderDate).HasColumnName("order_date");
                 entity.Property(e => e.Status).HasColumnName("status");
                 entity.Property(e => e.TotalAmount).HasColumnName("total_amount");
+            });
+
+            // Column name mappings for OrderServiceDetail (snake_case)
+            modelBuilder.Entity<OrderServiceDetail>(entity =>
+            {
+                entity.Property(e => e.Id).HasColumnName("id");
+                entity.Property(e => e.OrderServiceId).HasColumnName("order_service_id");
+                entity.Property(e => e.ServiceId).HasColumnName("service_id");
+                entity.Property(e => e.Quantity).HasColumnName("quantity");
+                entity.Property(e => e.UnitPrice).HasColumnName("unit_price");
             });
 
             // RolePermission composite key
@@ -100,9 +111,9 @@ namespace HotelBackend.Data
                 .OnDelete(DeleteBehavior.SetNull);
 
             modelBuilder.Entity<Review>()
-                .HasOne(r => r.Booking)
+                .HasOne(r => r.RoomType)
                 .WithMany()
-                .HasForeignKey(r => r.BookingId)
+                .HasForeignKey(r => r.RoomTypeId)
                 .OnDelete(DeleteBehavior.SetNull);
 
             // Article relationships
@@ -112,14 +123,129 @@ namespace HotelBackend.Data
                 .HasForeignKey(a => a.CategoryId)
                 .OnDelete(DeleteBehavior.SetNull);
 
+            modelBuilder.Entity<Article>()
+                .HasOne(a => a.Author)
+                .WithMany()
+                .HasForeignKey(a => a.AuthorId)
+                .OnDelete(DeleteBehavior.SetNull);
+
+            // RoomAmenity relationships
+            modelBuilder.Entity<RoomAmenity>()
+                .HasOne(ra => ra.RoomType)
+                .WithMany(rt => rt.RoomAmenities)
+                .HasForeignKey(ra => ra.RoomTypeId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<RoomAmenity>()
+                .HasOne(ra => ra.Amenity)
+                .WithMany(a => a.RoomAmenities)
+                .HasForeignKey(ra => ra.AmenityId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             // Unique constraints
             modelBuilder.Entity<Article>()
                 .HasIndex(a => a.Slug)
                 .IsUnique();
 
-            modelBuilder.Entity<Review>()
-                .HasIndex(r => new { r.UserId, r.BookingId })
-                .IsUnique();
+            // Decimal precision configurations
+            modelBuilder.Entity<Attraction>()
+                .Property(a => a.DistanceFromHotel)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Attraction>()
+                .Property(a => a.Latitude)
+                .HasPrecision(10, 7);
+
+            modelBuilder.Entity<Attraction>()
+                .Property(a => a.Longitude)
+                .HasPrecision(10, 7);
+
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.TotalEstimatedAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Booking>()
+                .Property(b => b.PaidAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<BookingDetail>()
+                .Property(bd => bd.PricePerNight)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Equipment>()
+                .Property(e => e.BasePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Equipment>()
+                .Property(e => e.DefaultPriceIfLost)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.DiscountAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.FinalTotal)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.TaxAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.TotalRoomAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Invoice>()
+                .Property(i => i.TotalServiceAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<LossAndDamage>()
+                .Property(l => l.PenaltyAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<OrderService>()
+                .Property(o => o.TotalAmount)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<OrderServiceDetail>()
+                .Property(o => o.UnitPrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Payment>()
+                .Property(p => p.AmountPaid)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<RoomInventory>()
+                .Property(r => r.PriceIfLost)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<RoomType>()
+                .Property(r => r.BasePrice)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<RoomType>()
+                .Property(r => r.Size)
+                .HasPrecision(10, 2);
+
+            modelBuilder.Entity<Service>()
+                .Property(s => s.Price)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Voucher>()
+                .Property(v => v.DiscountValue)
+                .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Voucher>()
+                .Property(v => v.MinBookingValue)
+                .HasPrecision(18, 2);
+
+            // User-Membership relationship (one-to-one)
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Membership)
+                .WithOne(m => m.User)
+                .HasForeignKey<Membership>(m => m.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
 
             base.OnModelCreating(modelBuilder);
         }

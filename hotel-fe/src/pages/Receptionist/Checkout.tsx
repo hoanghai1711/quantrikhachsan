@@ -1,20 +1,60 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Row, Col, Card, Button, Form, Spinner, Alert, Modal, Badge, InputGroup, Table } from 'react-bootstrap';
-import { getBookingByIdentifier, checkOut, getInvoice, createPayment, createMomoPayment } from '../../api/booking';
+import { getBookingByIdentifier, checkOut, getInvoice, createPayment, createMomoPayment, getCheckedInBookings } from '../../api/booking';
+import { getMembership } from '../../api/membership';
 import { showToast } from '../../components/common/ToastNotification';
-import { Search, User, Calendar, LogOut, FileText } from 'react-feather';
+import { Search, User, Calendar, LogOut, FileText, Award, Users } from 'react-feather';
+import InvoicePrint from '../../components/Invoice/InvoicePrint';
 
 const Checkout: React.FC = () => {
+  const [tab, setTab] = useState<'list' | 'search'>('list');
+  const [checkedInBookings, setCheckedInBookings] = useState<any[]>([]);
   const [searchType, setSearchType] = useState<'code' | 'phone'>('code');
   const [searchValue, setSearchValue] = useState('');
   const [booking, setBooking] = useState<any>(null);
   const [invoice, setInvoice] = useState<any>(null);
+  const [membership, setMembership] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [initialLoading, setInitialLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('Cash');
   const [paymentAmount, setPaymentAmount] = useState(0);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [showInvoicePrint, setShowInvoicePrint] = useState(false);
+
+  // Load checked-in bookings on component mount
+  useEffect(() => {
+    loadCheckedInBookings();
+  }, []);
+
+  const loadCheckedInBookings = async () => {
+    setInitialLoading(true);
+    try {
+      const data = await getCheckedInBookings();
+      setCheckedInBookings(data);
+    } catch (error) {
+      console.error('Error loading checked-in bookings:', error);
+      showToast('danger', 'Không thể tải danh sách khách đã check-in');
+    } finally {
+      setInitialLoading(false);
+    }
+  };
+
+  const handleSelectFromList = async (selectedBooking: any) => {
+    setLoading(true);
+    try {
+      const inv = await getInvoice(selectedBooking.id);
+      setBooking(selectedBooking);
+      setInvoice(inv);
+      setTab('search'); // Show details
+    } catch (error) {
+      console.error('Error loading invoice:', error);
+      showToast('danger', 'Không thể tải hóa đơn');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const searchBooking = async () => {
     if (!searchValue.trim()) return;
@@ -105,19 +145,15 @@ const Checkout: React.FC = () => {
       setShowConfirm(false);
       showToast('success', 'Check-out thành công');
       
-      // Reload booking và invoice
-      const updatedBooking = await getBookingByIdentifier(booking.bookingCode, 'code');
-      if (updatedBooking) {
-        setBooking(updatedBooking);
-        const updatedInv = await getInvoice(updatedBooking.id);
-        setInvoice(updatedInv);
-      }
+      // Reload danh sách khách đã check-in
+      await loadCheckedInBookings();
       
       // Reset form sau 2 giây
       setTimeout(() => {
         setBooking(null);
         setInvoice(null);
         setSearchValue('');
+        setTab('list');
       }, 2000);
     } catch (error) {
       showToast('danger', 'Check-out thất bại');
@@ -147,6 +183,91 @@ const Checkout: React.FC = () => {
             <Badge bg="danger" className="ms-2 px-3 py-2">Quầy lễ tân</Badge>
           </div>
 
+          {/* Tabs */}
+          <div className="mb-4 d-flex gap-2 border-bottom pb-3">
+            <Button 
+              variant={tab === 'list' ? 'primary' : 'outline-secondary'}
+              size="sm"
+              className="rounded-pill"
+              onClick={() => setTab('list')}
+              disabled={initialLoading}
+            >
+              <Users size={16} className="me-2" style={{display: 'inline'}} />
+              Danh sách khách ({checkedInBookings.length})
+            </Button>
+            <Button 
+              variant={tab === 'search' ? 'primary' : 'outline-secondary'}
+              size="sm"
+              className="rounded-pill"
+              onClick={() => setTab('search')}
+            >
+              <Search size={16} className="me-2" style={{display: 'inline'}} />
+              Tìm kiếm
+            </Button>
+          </div>
+
+          {/* List Tab */}
+          {tab === 'list' && (
+            <>
+              {initialLoading ? (
+                <div className="text-center py-5">
+                  <Spinner animation="border" variant="primary" />
+                  <p className="mt-3">Đang tải danh sách khách đã check-in...</p>
+                </div>
+              ) : checkedInBookings.length === 0 ? (
+                <Alert variant="info" className="mb-4">
+                  Không có khách nào đã check-in. <a href="#" onClick={() => setTab('search')}>Tìm kiếm booking</a>
+                </Alert>
+              ) : (
+                <Card className="border-0 shadow-sm">
+                  <Card.Body className="p-0">
+                    <div style={{ overflowX: 'auto' }}>
+                      <Table hover responsive className="mb-0">
+                        <thead className="table-light">
+                          <tr>
+                            <th>Mã booking</th>
+                            <th>Khách</th>
+                            <th>Điện thoại</th>
+                            <th>Loại phòng</th>
+                            <th>Check-in</th>
+                            <th>Check-out</th>
+                            <th className="text-center">Thao tác</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {checkedInBookings.map(b => (
+                            <tr key={b.id}>
+                              <td className="fw-bold">{b.bookingCode}</td>
+                              <td>{b.guestName}</td>
+                              <td>{b.guestPhone}</td>
+                              <td>{b.roomTypeName}</td>
+                              <td>{formatDate(b.checkInDate)}</td>
+                              <td>{formatDate(b.checkOutDate)}</td>
+                              <td className="text-center">
+                                <Button
+                                  size="sm"
+                                  variant="danger"
+                                  className="rounded-pill"
+                                  onClick={() => handleSelectFromList(b)}
+                                  disabled={loading}
+                                >
+                                  Check-out
+                                </Button>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </Table>
+                    </div>
+                  </Card.Body>
+                </Card>
+              )}
+            </>
+          )}
+
+          {/* Search Tab */}
+          {tab === 'search' && (
+            <>
           {/* Search */}
           <Row className="g-3 mb-4">
             <Col md={3}>
@@ -231,6 +352,29 @@ const Checkout: React.FC = () => {
                   </Card.Body>
                 </Card>
               </Col>
+
+              {/* Membership Info */}
+              {membership && (
+                <Col md={6}>
+                  <Card className="border-0 shadow-sm">
+                    <Card.Header className="bg-light">
+                      <h5 className="mb-0 d-flex align-items-center gap-2">
+                        <Award size={20} />
+                        Thông tin thành viên
+                      </h5>
+                    </Card.Header>
+                    <Card.Body>
+                      <p><strong>Hạng:</strong> 
+                        <Badge bg={membership.level === 'Gold' ? 'warning' : membership.level === 'Silver' ? 'secondary' : 'success'} className="ms-2">
+                          {membership.level}
+                        </Badge>
+                      </p>
+                      <p><strong>Điểm tích lũy:</strong> {membership.points} điểm</p>
+                      <p><strong>Ngày tham gia:</strong> {formatDate(membership.joinedAt)}</p>
+                    </Card.Body>
+                  </Card>
+                </Col>
+              )}
 
               {invoice && (
                 <Col md={12}>
@@ -340,7 +484,7 @@ const Checkout: React.FC = () => {
               )}
 
               <Col md={12} className="text-center">
-                <div className="d-flex gap-3 justify-content-center">
+                <div className="d-flex gap-3 justify-content-center flex-wrap">
                   <Button
                     onClick={handlePayment}
                     disabled={loading || !invoice || invoice.status === 'Paid'}
@@ -349,6 +493,15 @@ const Checkout: React.FC = () => {
                     className="px-4"
                   >
                     {loading ? <Spinner size="sm" /> : 'Thanh toán'}
+                  </Button>
+                  <Button
+                    onClick={() => setShowInvoicePrint(true)}
+                    disabled={loading || !invoice}
+                    size="lg"
+                    variant="info"
+                    className="px-4"
+                  >
+                    {loading ? <Spinner size="sm" /> : 'In hóa đơn'}
                   </Button>
                   <Button
                     onClick={handleCheckout}
@@ -426,6 +579,24 @@ const Checkout: React.FC = () => {
               </Button>
             </Modal.Footer>
           </Modal>
+
+          {/* Invoice Print Modal */}
+          {showInvoicePrint && invoice && booking && (
+            <Modal show={showInvoicePrint} onHide={() => setShowInvoicePrint(false)} centered size="lg" fullscreen="lg">
+              <Modal.Header closeButton>
+                <Modal.Title>In hóa đơn</Modal.Title>
+              </Modal.Header>
+              <Modal.Body>
+                <InvoicePrint 
+                  invoice={invoice} 
+                  booking={booking}
+                  onClose={() => setShowInvoicePrint(false)}
+                />
+              </Modal.Body>
+            </Modal>
+          )}
+            </>
+          )}
         </Card.Body>
       </Card>
     </div>

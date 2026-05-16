@@ -56,7 +56,7 @@ namespace HotelBackend.Controllers
             equipment.IsActive = true;
             equipment.CreatedAt = DateTime.UtcNow;
             equipment.UpdatedAt = DateTime.UtcNow;
-            equipment.InStockQuantity = equipment.TotalQuantity - equipment.InUseQuantity - equipment.DamagedQuantity - equipment.LiquidatedQuantity;
+            // InStockQuantity is read-only and calculated automatically
 
             _context.Equipments.Add(equipment);
             await _context.SaveChangesAsync();
@@ -87,7 +87,7 @@ namespace HotelBackend.Controllers
             existing.InUseQuantity = equipment.InUseQuantity;
             existing.DamagedQuantity = equipment.DamagedQuantity;
             existing.LiquidatedQuantity = equipment.LiquidatedQuantity;
-            existing.InStockQuantity = equipment.TotalQuantity - equipment.InUseQuantity - equipment.DamagedQuantity - equipment.LiquidatedQuantity;
+            // InStockQuantity is read-only and calculated automatically
             existing.BasePrice = equipment.BasePrice;
             existing.DefaultPriceIfLost = equipment.DefaultPriceIfLost;
             existing.Supplier = equipment.Supplier;
@@ -134,7 +134,7 @@ namespace HotelBackend.Controllers
             if (request.LiquidatedQuantity.HasValue)
                 equipment.LiquidatedQuantity = request.LiquidatedQuantity.Value;
 
-            equipment.InStockQuantity = equipment.TotalQuantity - equipment.InUseQuantity - equipment.DamagedQuantity - equipment.LiquidatedQuantity;
+            // InStockQuantity is read-only and calculated automatically
             equipment.UpdatedAt = DateTime.UtcNow;
 
             await _context.SaveChangesAsync();

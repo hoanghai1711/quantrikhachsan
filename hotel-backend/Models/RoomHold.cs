@@ -12,17 +12,21 @@ namespace HotelBackend.Models
         public int RoomTypeId { get; set; }
 
         [Column("check_in")]
-        public DateTime CheckIn { get; set; }
+        public DateTimeOffset CheckIn { get; set; }
 
         [Column("check_out")]
-        public DateTime CheckOut { get; set; }
+        public DateTimeOffset CheckOut { get; set; }
 
         [Column("hold_expiry")]
-        public DateTime HoldExpiry { get; set; }
+        public DateTimeOffset HoldExpiry { get; set; }
 
         [Column("created_at")]
-        public DateTime CreatedAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
 
+        [Column("updated_at")]
+        public DateTimeOffset? UpdatedAt { get; set; }
+
+        // Navigation properties
         public RoomType? RoomType { get; set; }
     }
 }

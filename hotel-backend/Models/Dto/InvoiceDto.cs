@@ -12,7 +12,7 @@ namespace HotelBackend.Models.Dto
         public decimal FinalTotal { get; set; }
         public decimal TotalPaid { get; set; } // Tính từ Payments
         public string? Status { get; set; }
-        public DateTime CreatedAt { get; set; }
-        public DateTime? PaidAt { get; set; }
+        public DateTimeOffset CreatedAt { get; set; }
+        public DateTimeOffset? PaidAt { get; set; }
     }
 }

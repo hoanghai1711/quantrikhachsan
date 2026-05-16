@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Row, Col, Card, Button, Table, Modal, Form, Alert, Badge, Tab, Tabs, Spinner } from 'react-bootstrap';
-import { FaPlus, FaEdit, FaTrash, FaEye, FaBed, FaBuilding } from 'react-icons/fa';
+import { FaPlus, FaEdit, FaTrash, FaEye, FaBed, FaBuilding, FaHistory, FaTh, FaList } from 'react-icons/fa';
 import {
   getRoomTypes,
   getRooms,
@@ -35,6 +35,8 @@ const RoomManagement: React.FC = () => {
     name: '',
     description: '',
     basePrice: 0,
+    capacityAdults: 1,
+    capacityChildren: 0,
     maxOccupancy: 1,
     size: 0,
     isActive: true
@@ -58,6 +60,14 @@ const RoomManagement: React.FC = () => {
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedItem, setSelectedItem] = useState<RoomType | Room | null>(null);
   const [isRoomDetail, setIsRoomDetail] = useState(false);
+
+  // Audit History Modal
+  const [showAuditModal, setShowAuditModal] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [loadingAudit, setLoadingAudit] = useState(false);
+
+  // View Mode
+  const [viewMode, setViewMode] = useState<'table' | 'grid'>('table');
 
   useEffect(() => {
     loadData();
@@ -254,6 +264,8 @@ const RoomManagement: React.FC = () => {
         name: roomType.name || '',
         description: roomType.description || '',
         basePrice: roomType.basePrice,
+        capacityAdults: roomType.capacityAdults || 1,
+        capacityChildren: roomType.capacityChildren || 0,
         maxOccupancy: roomType.maxOccupancy,
         size: roomType.size,
         isActive: roomType.isActive
@@ -264,6 +276,8 @@ const RoomManagement: React.FC = () => {
         name: '',
         description: '',
         basePrice: 0,
+        capacityAdults: 1,
+        capacityChildren: 0,
         maxOccupancy: 1,
         size: 0,
         isActive: true
@@ -303,6 +317,36 @@ const RoomManagement: React.FC = () => {
   const handleCloseRoomModal = () => {
     setShowRoomModal(false);
     setEditingRoom(null);
+  };
+
+  const handleViewAuditHistory = async (room: Room) => {
+    setLoadingAudit(true);
+    setShowAuditModal(true);
+    try {
+      const params = new URLSearchParams({
+        filter: 'Rooms',
+        pageSize: '50'
+      });
+      
+      const response = await fetch(`/api/audit-logs?${params}`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
+        },
+      });
+      
+      if (!response.ok) throw new Error('Failed to load audit logs');
+      const data = await response.json();
+      
+      // Filter logs for this specific room
+      const roomLogs = Array.isArray(data) ? data.filter(log => log.recordId === room.id) : [];
+      setAuditLogs(roomLogs);
+    } catch (error) {
+      console.error('Load audit logs error:', error);
+      setAuditLogs([]);
+      showToast('danger', 'Không thể tải lịch sử thay đổi');
+    } finally {
+      setLoadingAudit(false);
+    }
   };
 
   const handleShowDetailModal = (item: RoomType | Room, isRoom: boolean) => {
@@ -346,14 +390,32 @@ const RoomManagement: React.FC = () => {
           <Card>
             <Card.Header className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">Danh sách phòng</h5>
-              <Button
-                variant="primary"
-                onClick={() => handleShowRoomModal()}
-                disabled={loading || roomTypes.length === 0}
-              >
-                <FaPlus className="me-2" />
-                Thêm phòng
-              </Button>
+              <div className="d-flex gap-2">
+                <div className="btn-group" role="group">
+                  <Button
+                    variant={viewMode === 'table' ? 'primary' : 'outline-primary'}
+                    size="sm"
+                    onClick={() => setViewMode('table')}
+                  >
+                    <FaList />
+                  </Button>
+                  <Button
+                    variant={viewMode === 'grid' ? 'primary' : 'outline-primary'}
+                    size="sm"
+                    onClick={() => setViewMode('grid')}
+                  >
+                    <FaTh />
+                  </Button>
+                </div>
+                <Button
+                  variant="primary"
+                  onClick={() => handleShowRoomModal()}
+                  disabled={loading || roomTypes.length === 0}
+                >
+                  <FaPlus className="me-2" />
+                  Thêm phòng
+                </Button>
+              </div>
             </Card.Header>
             <Card.Body>
               {loading ? (
@@ -365,7 +427,7 @@ const RoomManagement: React.FC = () => {
                 <Alert variant="info" className="text-center">
                   Chưa có phòng nào. {roomTypes.length === 0 ? 'Vui lòng tạo loại phòng trước.' : 'Nhấn "Thêm phòng" để tạo phòng mới.'}
                 </Alert>
-              ) : (
+              ) : viewMode === 'table' ? (
                 <div className="table-responsive" style={{ maxHeight: '70vh', overflow: 'auto' }}>
                   <Table striped hover>
                     <thead>
@@ -393,6 +455,9 @@ const RoomManagement: React.FC = () => {
                           <td className="d-flex gap-2">
                             <Button variant="outline-info" size="sm" onClick={() => handleShowDetailModal(room, true)}>
                               <FaEye />
+                            </Button>
+                            <Button variant="outline-secondary" size="sm" onClick={() => handleViewAuditHistory(room)} title="Lịch sử thay đổi">
+                              <FaHistory />
                             </Button>
                             <Button variant="outline-primary" size="sm" onClick={() => handleShowRoomModal(room)}>
                               <FaEdit />
@@ -435,6 +500,80 @@ const RoomManagement: React.FC = () => {
                           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                         >
                           Sau »
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                // Grid View
+                <div>
+                  <Row className="g-3">
+                    {paginatedRooms.map(room => (
+                      <Col key={room.id} lg={3} md={4} sm={6}>
+                        <Card className="h-100 shadow-sm border-0" style={{ cursor: 'pointer' }}>
+                          <Card.Body className="d-flex flex-column">
+                            <div className="text-center mb-3">
+                              <div className="bg-primary bg-opacity-10 rounded-circle d-inline-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
+                                <FaBed size={24} className="text-primary" />
+                              </div>
+                            </div>
+                            
+                            <h5 className="text-center mb-2">{room.roomNumber}</h5>
+                            
+                            <div className="text-center mb-2">
+                              <Badge bg={getStatusBadgeVariant(room.status || 'Available')} className="mb-2">
+                                {room.status || 'Available'}
+                              </Badge>
+                            </div>
+                            
+                            <div className="small text-muted text-center mb-3">
+                              <div>{room.roomType?.name || 'N/A'}</div>
+                              <div>Tầng {room.floor}</div>
+                            </div>
+                            
+                            <div className="mt-auto">
+                              <div className="d-flex gap-1 justify-content-center">
+                                <Button variant="outline-info" size="sm" onClick={() => handleShowDetailModal(room, true)} title="Xem chi tiết">
+                                  <FaEye />
+                                </Button>
+                                <Button variant="outline-secondary" size="sm" onClick={() => handleViewAuditHistory(room)} title="Lịch sử thay đổi">
+                                  <FaHistory />
+                                </Button>
+                                <Button variant="outline-primary" size="sm" onClick={() => handleShowRoomModal(room)} title="Chỉnh sửa">
+                                  <FaEdit />
+                                </Button>
+                                <Button variant="outline-danger" size="sm" onClick={() => handleDeleteRoom(room.id)} title="Xóa">
+                                  <FaTrash />
+                                </Button>
+                              </div>
+                            </div>
+                          </Card.Body>
+                        </Card>
+                      </Col>
+                    ))}
+                  </Row>
+                  
+                  {rooms.length > itemsPerPage && (
+                    <div className="d-flex justify-content-center mt-4">
+                      <div>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          disabled={currentPage === 1}
+                          onClick={() => setCurrentPage(prev => prev - 1)}
+                          className="me-2"
+                        >
+                          Trước
+                        </Button>
+                        <span className="mx-2">Trang {currentPage} / {totalPages}</span>
+                        <Button
+                          variant="outline-secondary"
+                          size="sm"
+                          disabled={currentPage === totalPages}
+                          onClick={() => setCurrentPage(prev => prev + 1)}
+                        >
+                          Sau
                         </Button>
                       </div>
                     </div>
@@ -549,6 +688,30 @@ const RoomManagement: React.FC = () => {
               </Col>
             </Row>
             <Row>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Người lớn *</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={roomTypeForm.capacityAdults}
+                    onChange={(e) => setRoomTypeForm({...roomTypeForm, capacityAdults: Number(e.target.value)})}
+                    min="1"
+                    required
+                  />
+                </Form.Group>
+              </Col>
+              <Col md={3}>
+                <Form.Group className="mb-3">
+                  <Form.Label>Trẻ em</Form.Label>
+                  <Form.Control
+                    type="number"
+                    value={roomTypeForm.capacityChildren}
+                    onChange={(e) => setRoomTypeForm({...roomTypeForm, capacityChildren: Number(e.target.value)})}
+                    min="0"
+                    required
+                  />
+                </Form.Group>
+              </Col>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Sức chứa tối đa *</Form.Label>
@@ -561,6 +724,8 @@ const RoomManagement: React.FC = () => {
                   />
                 </Form.Group>
               </Col>
+            </Row>
+            <Row>
               <Col md={6}>
                 <Form.Group className="mb-3">
                   <Form.Label>Diện tích (m²) *</Form.Label>
@@ -778,6 +943,81 @@ const RoomManagement: React.FC = () => {
             )
           )}
         </Modal.Body>
+      </Modal>
+
+      {/* Audit History Modal */}
+      <Modal show={showAuditModal} onHide={() => setShowAuditModal(false)} size="lg">
+        <Modal.Header closeButton>
+          <Modal.Title>Lịch sử thay đổi trạng thái phòng</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {loadingAudit ? (
+            <div className="text-center py-4">
+              <Spinner animation="border" variant="primary" />
+              <p className="mt-2">Đang tải lịch sử...</p>
+            </div>
+          ) : auditLogs.length === 0 ? (
+            <Alert variant="info">
+              <FaHistory className="me-2" />
+              Không có lịch sử thay đổi cho phòng này
+            </Alert>
+          ) : (
+            <div className="table-responsive">
+              <Table hover size="sm">
+                <thead>
+                  <tr>
+                    <th>Hành động</th>
+                    <th>Thời gian</th>
+                    <th>Người dùng</th>
+                    <th>Chi tiết thay đổi</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {auditLogs.map((log, index) => (
+                    <tr key={log.id}>
+                      <td>
+                        <Badge bg={log.action === 'UPDATE' ? 'primary' : 'secondary'}>
+                          {log.action}
+                        </Badge>
+                      </td>
+                      <td>{new Date(log.timestamp).toLocaleString('vi-VN')}</td>
+                      <td>{log.userId ? `User ${log.userId}` : 'Hệ thống'}</td>
+                      <td>
+                        {log.oldValues && log.newValues && (
+                          <small className="text-muted">
+                            {(() => {
+                              try {
+                                const oldVals = JSON.parse(log.oldValues);
+                                const newVals = JSON.parse(log.newValues);
+                                
+                                const changes = [];
+                                if (oldVals.status !== newVals.status) {
+                                  changes.push(`Trạng thái: ${oldVals.status || 'N/A'} → ${newVals.status || 'N/A'}`);
+                                }
+                                if (oldVals.cleaningStatus !== newVals.cleaningStatus) {
+                                  changes.push(`Trạng thái dọn: ${oldVals.cleaningStatus || 'N/A'} → ${newVals.cleaningStatus || 'N/A'}`);
+                                }
+                                
+                                return changes.length > 0 ? changes.join(', ') : 'Chi tiết không có sẵn';
+                              } catch {
+                                return 'Chi tiết không có sẵn';
+                              }
+                            })()}
+                          </small>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </Table>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowAuditModal(false)}>
+            Đóng
+          </Button>
+        </Modal.Footer>
       </Modal>
     </Container>
   );

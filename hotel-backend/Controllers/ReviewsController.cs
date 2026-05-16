@@ -393,6 +393,31 @@ namespace HotelBackend.Controllers
             }
         }
 
+        [HttpGet("stats")]
+        [AllowAnonymous]
+        public async Task<IActionResult> GetReviewStatsAlias()
+        {
+            try
+            {
+                var stats = await _context.Reviews
+                    .GroupBy(r => r.Status)
+                    .Select(g => new
+                    {
+                        status = g.Key,
+                        count = g.Count(),
+                        avg_rating = g.Any() ? Math.Round(g.Average(r => r.Rating), 2) : 0
+                    })
+                    .ToListAsync();
+
+                return Ok(stats);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error retrieving review stats");
+                return StatusCode(500, new { message = "Lỗi khi lấy thống kê đánh giá" });
+            }
+        }
+
         /// <summary>
         /// Get reviews by room type
         /// </summary>

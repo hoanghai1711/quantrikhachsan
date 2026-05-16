@@ -4,7 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaSearch, FaCopy } fr
 import { ServiceItem, ServiceCategory } from '../../types';
 import { showToast } from '../../components/common/ToastNotification';
 
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = '/api';
 
 const ServiceManagement: React.FC = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -12,6 +12,7 @@ const ServiceManagement: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState<ServiceItem | null>(null);
   const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
   const [categoryId, setCategoryId] = useState<number | undefined>(undefined);
   const [price, setPrice] = useState(0);
   const [search, setSearch] = useState('');
@@ -77,7 +78,7 @@ const ServiceManagement: React.FC = () => {
 
     try {
       setLoading(true);
-      const serviceData = { name, categoryId, price, isActive: true };
+      const serviceData = { name, description, categoryId, price, isActive: true };
 
       if (editing) {
         const response = await fetch(`${API_BASE_URL}/services/${editing.id}`, {
@@ -124,7 +125,7 @@ const ServiceManagement: React.FC = () => {
     }
   };
 
-  const reset = () => { setEditing(null); setName(''); setCategoryId(undefined); setPrice(0); };
+  const reset = () => { setEditing(null); setName(''); setDescription(''); setCategoryId(undefined); setPrice(0); };
 
   const toggleAvailable = async (id: number) => {
     try {
@@ -221,7 +222,7 @@ const ServiceManagement: React.FC = () => {
               <td>{s.name}</td><td><Badge bg="secondary">{typeof s.category === 'string' ? s.category : s.category?.name || 'N/A'}</Badge></td><td>{s.price.toLocaleString()} VND</td>
               <td><Badge bg={s.isActive ? 'success' : 'secondary'}>{s.isActive ? 'Có sẵn' : 'Không có sẵn'}</Badge></td>
               <td className="d-flex gap-2">
-                <Button size="sm" variant="outline-primary" onClick={() => { setEditing(s); setName(s.name); setCategoryId(s.categoryId); setPrice(s.price); setShowModal(true); }} disabled={loading}><FaEdit /></Button>
+                <Button size="sm" variant="outline-primary" onClick={() => { setEditing(s); setName(s.name); setDescription(s.description || ''); setCategoryId(s.categoryId); setPrice(s.price); setShowModal(true); }} disabled={loading}><FaEdit /></Button>
                 <Button size="sm" variant="outline-info" onClick={() => copyService(s)} disabled={loading}><FaCopy /></Button>
                 <Button size="sm" variant={s.isActive ? 'outline-danger' : 'outline-success'} onClick={() => toggleAvailable(s.id)} disabled={loading}>{s.isActive ? <FaToggleOff /> : <FaToggleOn />}</Button>
                 <Button size="sm" variant="outline-danger" onClick={() => deleteService(s.id)} disabled={loading}><FaTrash /></Button>
@@ -234,6 +235,7 @@ const ServiceManagement: React.FC = () => {
       <Modal show={showModal} onHide={() => setShowModal(false)}><Modal.Header closeButton><Modal.Title>{editing ? 'Sửa dịch vụ' : 'Thêm dịch vụ'}</Modal.Title></Modal.Header>
       <Modal.Body><Form>
         <Form.Group className="mb-2"><Form.Label>Tên</Form.Label><Form.Control value={name} onChange={e => setName(e.target.value)} /></Form.Group>
+        <Form.Group className="mb-2"><Form.Label>Mô tả</Form.Label><Form.Control as="textarea" rows={3} value={description} onChange={e => setDescription(e.target.value)} placeholder="Nhập mô tả dịch vụ" /></Form.Group>
         <Form.Group className="mb-2"><Form.Label>Danh mục</Form.Label><Form.Select value={categoryId || ''} onChange={e => setCategoryId(e.target.value ? Number(e.target.value) : undefined)}><option value="">Chọn danh mục</option>{categories.map(cat => <option key={cat.id} value={cat.id}>{cat.name}</option>)}</Form.Select></Form.Group>
         <Form.Group className="mb-2"><Form.Label>Giá</Form.Label><Form.Control type="number" value={price} onChange={e => setPrice(Number(e.target.value))} /></Form.Group>
       </Form></Modal.Body>

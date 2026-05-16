@@ -17,7 +17,7 @@ const ArticleDetailPage: React.FC = () => {
       try {
         const data = await getArticleBySlug(slug);
         setArticle(data);
-        document.title = data.metaTitle || data.title || 'Bài viết';
+        document.title = data.title || 'Bài viết';
       } catch (err) {
         setError((err as Error).message || 'Không thể tải bài viết');
       } finally {
@@ -61,8 +61,7 @@ const ArticleDetailPage: React.FC = () => {
             {article.publishedAt && <small className="text-muted">Đăng ngày {new Date(article.publishedAt).toLocaleDateString()}</small>}
           </div>
           <Card.Title className="mb-2">{article.title}</Card.Title>
-          <Card.Subtitle className="mb-3 text-muted">{article.metaTitle || 'Tiêu đề SEO'}</Card.Subtitle>
-          <p className="text-secondary mb-4">{article.metaDescription || 'Mô tả meta chưa được cung cấp.'}</p>
+          <p className="text-secondary mb-4">{article.content ? 'Bài viết' : 'Không có nội dung'}</p>
           <div className="article-slug mb-4">
             <strong>Slug:</strong> <span>{article.slug}</span>
           </div>

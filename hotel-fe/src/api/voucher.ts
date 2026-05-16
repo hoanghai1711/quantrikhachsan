@@ -1,6 +1,6 @@
 import { Voucher, VoucherType } from '../types';
 
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = '/api';
 
 export interface CreateVoucherPayload {
   code: string;

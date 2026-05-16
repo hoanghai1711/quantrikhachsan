@@ -22,7 +22,7 @@ namespace HotelBackend.Controllers
         [AllowAnonymous]
         public async Task<IActionResult> GetAttractions()
         {
-            var attractions = await _context.Attractions.Where(a => a.IsActive).ToListAsync();
+            var attractions = await _context.Attractions.Where(a => a.IsActive == true).ToListAsync();
             return Ok(attractions);
         }
 
@@ -71,12 +71,9 @@ namespace HotelBackend.Controllers
 
             existing.Name = attraction.Name;
             existing.Description = attraction.Description;
-            existing.Location = attraction.Location;
             existing.Address = attraction.Address;
             existing.Latitude = attraction.Latitude;
             existing.Longitude = attraction.Longitude;
-            existing.Category = attraction.Category;
-            existing.ImageUrl = attraction.ImageUrl;
             existing.DistanceFromHotel = attraction.DistanceFromHotel;
             existing.IsActive = attraction.IsActive;
 

@@ -36,7 +36,7 @@ interface RoomInventory {
   room?: { id: number; roomNumber?: string };
 }
 
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = '/api';
 
 const SuppliesManagement: React.FC = () => {
   const [equipments, setEquipments] = useState<Equipment[]>([]);
@@ -95,7 +95,9 @@ const SuppliesManagement: React.FC = () => {
       });
       if (!response.ok) throw new Error('Failed to load equipments');
       const data = await response.json();
-      setEquipments(data);
+      // Handle both array format and { $values: array } format
+      const equipmentsList = Array.isArray(data) ? data : (data?.$values || []);
+      setEquipments(Array.isArray(equipmentsList) ? equipmentsList : []);
     } catch (error) {
       showToast('danger', 'Không thể tải danh sách thiết bị');
     }
@@ -117,7 +119,9 @@ const SuppliesManagement: React.FC = () => {
       });
       if (!response.ok) throw new Error('Failed to load room inventory');
       const data = await response.json();
-      setRoomInventory(data);
+      // Handle both array format and { $values: array } format
+      const inventoryList = Array.isArray(data) ? data : (data?.$values || []);
+      setRoomInventory(Array.isArray(inventoryList) ? inventoryList : []);
     } catch (error) {
       showToast('danger', 'Không thể tải inventory phòng');
     }

@@ -1,18 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Badge, Row, Col, Spinner, Alert } from 'react-bootstrap';
 import { Award, Star, TrendingUp } from 'react-feather';
-import { getMembership, Membership as MembershipType } from '../../api/membership';
+import { getMembership, getMembershipTransactions, Membership as MembershipType, Transaction } from '../../api/membership';
 
 const Membership: React.FC = () => {
   const [membership, setMembership] = useState<MembershipType | null>(null);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchMembership = async () => {
       try {
-        const data = await getMembership();
-        setMembership(data);
+        const [membershipData, transactionsData] = await Promise.all([
+          getMembership(),
+          getMembershipTransactions()
+        ]);
+        setMembership(membershipData);
+        setTransactions(transactionsData);
       } catch (err: any) {
         setError(err.message || 'Lỗi kết nối');
       } finally {
@@ -208,6 +213,56 @@ const Membership: React.FC = () => {
                   </div>
                 </Col>
               </Row>
+            </Card.Body>
+          </Card>
+        </Col>
+
+        {/* Point History */}
+        <Col md={12}>
+          <Card className="shadow-lg border-0 rounded-4 overflow-hidden">
+            <Card.Header className="bg-primary text-white py-4">
+              <h4 className="mb-0 d-flex align-items-center gap-2">
+                <Award size={24} />
+                Lịch sử tích điểm
+              </h4>
+            </Card.Header>
+            <Card.Body className="p-4">
+              {transactions.length > 0 ? (
+                <div className="table-responsive">
+                  <table className="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Ngày</th>
+                        <th>Loại</th>
+                        <th>Mô tả</th>
+                        <th className="text-end">Điểm</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {transactions.map((transaction) => (
+                        <tr key={transaction.id}>
+                          <td>{new Date(transaction.createdAt).toLocaleDateString('vi-VN')}</td>
+                          <td>
+                            <Badge bg={transaction.type === 'booking' ? 'success' : transaction.type === 'service' ? 'info' : 'secondary'}>
+                              {transaction.type === 'booking' ? 'Đặt phòng' : transaction.type === 'service' ? 'Dịch vụ' : transaction.type}
+                            </Badge>
+                          </td>
+                          <td>{transaction.description}</td>
+                          <td className="text-end">
+                            <span className={transaction.amount > 0 ? 'text-success' : 'text-danger'}>
+                              {transaction.amount > 0 ? '+' : ''}{transaction.amount}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-muted">Chưa có lịch sử tích điểm</p>
+                </div>
+              )}
             </Card.Body>
           </Card>
         </Col>

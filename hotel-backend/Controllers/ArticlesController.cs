@@ -24,7 +24,7 @@ namespace HotelBackend.Controllers
         {
             var articles = await _context.Articles
                 .Include(a => a.Category)
-                .Where(a => a.Status == "Published")
+                .Where(a => a.IsActive == true)
                 .ToListAsync();
             return Ok(articles);
         }
@@ -49,7 +49,7 @@ namespace HotelBackend.Controllers
         {
             var article = await _context.Articles
                 .Include(a => a.Category)
-                .FirstOrDefaultAsync(a => a.Slug == slug && a.Status == "Published");
+                .FirstOrDefaultAsync(a => a.Slug == slug && a.IsActive == true);
             if (article == null)
             {
                 return NotFound(new { message = "Article not found" });
@@ -66,9 +66,9 @@ namespace HotelBackend.Controllers
                 return BadRequest(ModelState);
             }
 
-            if (string.IsNullOrEmpty(article.Status))
+            if (article.IsActive == null)
             {
-                article.Status = "Draft";
+                article.IsActive = false;
             }
 
             _context.Articles.Add(article);
@@ -94,11 +94,9 @@ namespace HotelBackend.Controllers
 
             existing.Title = article.Title;
             existing.Content = article.Content;
-            existing.Author = article.Author;
+            existing.AuthorId = article.AuthorId;
             existing.PublishedAt = article.PublishedAt;
-            existing.Status = article.Status;
-            existing.MetaTitle = article.MetaTitle;
-            existing.MetaDescription = article.MetaDescription;
+            existing.IsActive = article.IsActive;
             existing.Slug = article.Slug;
             existing.ImageUrl = article.ImageUrl;
             existing.CategoryId = article.CategoryId;

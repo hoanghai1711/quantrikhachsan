@@ -3,8 +3,8 @@ using System;
 using HotelBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
-using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
 #nullable disable
 
@@ -18,26 +18,30 @@ namespace HotelBackend.Migrations
 #pragma warning disable 612, 618
             modelBuilder
                 .HasAnnotation("ProductVersion", "8.0.0")
-                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+                .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
-            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+            NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
             modelBuilder.Entity("HotelBackend.Models.Amenity", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("IconUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("icon_url");
 
                     b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
@@ -48,47 +52,51 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<string>("Author")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int?>("AuthorId")
+                        .HasColumnType("integer")
+                        .HasColumnName("author_id");
 
                     b.Property<int?>("CategoryId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("category_id");
 
                     b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("content");
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("thumbnail_url");
 
-                    b.Property<string>("MetaDescription")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
-                    b.Property<string>("MetaTitle")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime?>("PublishedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("PublishedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("published_at");
 
                     b.Property<string>("Slug")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("slug");
 
                     b.Property<string>("Title")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("title");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AuthorId");
 
                     b.HasIndex("CategoryId");
 
                     b.HasIndex("Slug")
-                        .IsUnique()
-                        .HasFilter("[Slug] IS NOT NULL");
+                        .IsUnique();
 
                     b.ToTable("Articles");
                 });
@@ -97,58 +105,67 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<bool?>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
-                    b.ToTable("ArticleCategories");
+                    b.ToTable("Article_Categories");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.Attraction", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Address")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Category")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("address");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
-                    b.Property<decimal>("DistanceFromHotel")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("DistanceFromHotel")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
+                        .HasColumnName("distance_km");
 
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_active");
 
                     b.Property<decimal?>("Latitude")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Location")
-                        .HasColumnType("nvarchar(max)");
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)")
+                        .HasColumnName("latitude");
 
                     b.Property<decimal?>("Longitude")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(10, 7)
+                        .HasColumnType("numeric(10,7)")
+                        .HasColumnName("longitude");
+
+                    b.Property<string>("MapLink")
+                        .HasColumnType("text")
+                        .HasColumnName("map_embed_link");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
@@ -159,87 +176,112 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Action")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("IpAddress")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("action");
 
                     b.Property<string>("NewValues")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("new_value");
 
                     b.Property<string>("OldValues")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("old_value");
 
-                    b.Property<string>("RecordId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("RecordId")
+                        .HasColumnType("integer")
+                        .HasColumnName("record_id");
 
                     b.Property<string>("TableName")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("table_name");
 
-                    b.Property<DateTime>("Timestamp")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("Timestamp")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("Audit_Logs");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.Booking", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("BookingCode")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("booking_code");
 
+                    b.Property<DateTimeOffset?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
                     b.Property<string>("GuestEmail")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("guest_email");
 
                     b.Property<string>("GuestName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)")
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)")
                         .HasColumnName("guest_name");
 
                     b.Property<string>("GuestPhone")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("guest_phone");
 
+                    b.Property<DateTimeOffset?>("HoldExpires")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("hold_expires");
+
+                    b.Property<int?>("LoyaltyEarned")
+                        .HasColumnType("integer")
+                        .HasColumnName("loyalty_earned");
+
+                    b.Property<decimal?>("PaidAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("paid_amount");
+
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
-                    b.Property<decimal>("TotalEstimatedAmount")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<decimal?>("TotalEstimatedAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_estimated_amount");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int")
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
                         .HasColumnName("user_id");
 
                     b.Property<int?>("VoucherId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("voucher_id");
 
                     b.HasKey("Id");
@@ -255,33 +297,34 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int")
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("integer")
                         .HasColumnName("booking_id");
 
-                    b.Property<DateTime>("CheckInDate")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset>("CheckInDate")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("check_in_date");
 
-                    b.Property<DateTime>("CheckOutDate")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset>("CheckOutDate")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("check_out_date");
 
                     b.Property<decimal>("PricePerNight")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("price_per_night");
 
                     b.Property<int?>("RoomId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("room_id");
 
-                    b.Property<int>("RoomTypeId")
-                        .HasColumnType("int")
+                    b.Property<int?>("RoomTypeId")
+                        .HasColumnType("integer")
                         .HasColumnName("room_type_id");
 
                     b.HasKey("Id");
@@ -299,57 +342,72 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("BasePrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("BasePrice");
 
                     b.Property<string>("Category")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("Category");
 
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("CreatedAt");
 
                     b.Property<int>("DamagedQuantity")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("DamagedQuantity");
 
                     b.Property<decimal>("DefaultPriceIfLost")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("DefaultPriceIfLost");
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("InStockQuantity")
-                        .HasColumnType("int");
+                        .HasColumnType("text")
+                        .HasColumnName("ImageUrl");
 
                     b.Property<int>("InUseQuantity")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("InUseQuantity");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .HasColumnType("boolean")
+                        .HasColumnName("IsActive");
 
                     b.Property<string>("ItemCode")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("ItemCode");
 
                     b.Property<int>("LiquidatedQuantity")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("LiquidatedQuantity");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("Name");
 
                     b.Property<string>("Supplier")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("Supplier");
 
                     b.Property<int>("TotalQuantity")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("TotalQuantity");
 
                     b.Property<string>("Unit")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("Unit");
 
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("UpdatedAt");
 
                     b.HasKey("Id");
 
@@ -360,40 +418,52 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("BookingId")
-                        .HasColumnType("int");
+                    b.Property<int?>("BookingId")
+                        .HasColumnType("integer")
+                        .HasColumnName("booking_id");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
 
-                    b.Property<decimal>("DiscountAmount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("DiscountAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("discount_amount");
 
-                    b.Property<decimal>("FinalTotal")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime?>("PaidAt")
-                        .HasColumnType("datetime2");
+                    b.Property<decimal?>("FinalTotal")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("final_total");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("status");
 
-                    b.Property<decimal>("TaxAmount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("TaxAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("tax_amount");
 
-                    b.Property<decimal>("TotalDamageAmount")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<decimal?>("TotalDamageAmount")
+                        .HasColumnType("numeric")
                         .HasColumnName("total_damage_amount");
 
-                    b.Property<decimal>("TotalRoomAmount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("TotalRoomAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_room_amount");
 
-                    b.Property<decimal>("TotalServiceAmount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal?>("TotalServiceAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("total_service_amount");
 
                     b.HasKey("Id");
 
@@ -407,42 +477,45 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("BookingDetailId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("booking_detail_id");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("description");
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("image_url");
 
                     b.Property<decimal>("PenaltyAmount")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("penalty_amount");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("quantity");
 
                     b.Property<int?>("RoomInventoryId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("room_inventory_id");
 
                     b.HasKey("Id");
 
                     b.HasIndex("BookingDetailId");
+
+                    b.HasIndex("RoomInventoryId");
 
                     b.ToTable("Loss_And_Damages");
                 });
@@ -451,86 +524,139 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("JoinedAt")
-                        .HasColumnType("datetime2");
+                    b.Property<decimal?>("DiscountPercent")
+                        .HasColumnType("numeric")
+                        .HasColumnName("discount_percent");
 
-                    b.Property<DateTime?>("LastUpdated")
-                        .HasColumnType("datetime2");
+                    b.Property<int?>("MinPoints")
+                        .HasColumnType("integer")
+                        .HasColumnName("min_points");
 
-                    b.Property<string>("Level")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("TierName")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("tier_name");
 
-                    b.Property<int>("Points")
-                        .HasColumnType("int");
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
 
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId")
+                        .IsUnique();
+
+                    b.ToTable("Memberships");
+                });
+
+            modelBuilder.Entity("HotelBackend.Models.Notification", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .HasColumnType("text")
+                        .HasColumnName("content");
+
+                    b.Property<DateTimeOffset?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("created_at");
+
+                    b.Property<bool>("IsRead")
+                        .HasColumnType("boolean")
+                        .HasColumnName("is_read");
+
+                    b.Property<string>("ReferenceLink")
+                        .HasColumnType("text")
+                        .HasColumnName("reference_link");
+
+                    b.Property<string>("Title")
+                        .HasColumnType("text")
+                        .HasColumnName("title");
+
+                    b.Property<string>("Type")
+                        .HasColumnType("text")
+                        .HasColumnName("type");
+
+                    b.Property<int?>("UserId")
+                        .HasColumnType("integer")
+                        .HasColumnName("user_id");
 
                     b.HasKey("Id");
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Memberships");
+                    b.ToTable("Notifications");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.OrderService", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int?>("BookingId")
-                        .HasColumnType("int")
-                        .HasColumnName("booking_id");
+                    b.Property<int?>("BookingDetailId")
+                        .HasColumnType("integer")
+                        .HasColumnName("booking_detail_id");
 
-                    b.Property<DateTime>("OrderDate")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset?>("OrderDate")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("order_date");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
-                    b.Property<decimal>("TotalAmount")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<decimal?>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("total_amount");
 
                     b.HasKey("Id");
 
-                    b.HasIndex("BookingId");
+                    b.HasIndex("BookingDetailId");
 
-                    b.ToTable("OrderServices");
+                    b.ToTable("Order_Services");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.OrderServiceDetail", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<int>("OrderServiceId")
-                        .HasColumnType("int");
+                    b.Property<int?>("OrderServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("order_service_id");
 
                     b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
 
-                    b.Property<int>("ServiceId")
-                        .HasColumnType("int");
-
-                    b.Property<decimal>("Subtotal")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<int?>("ServiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("service_id");
 
                     b.Property<decimal>("UnitPrice")
-                        .HasColumnType("decimal(18,2)");
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("unit_price");
 
                     b.HasKey("Id");
 
@@ -538,34 +664,40 @@ namespace HotelBackend.Migrations
 
                     b.HasIndex("ServiceId");
 
-                    b.ToTable("OrderServiceDetails");
+                    b.ToTable("Order_Service_Details");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.Payment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<decimal>("Amount")
-                        .HasColumnType("decimal(18,2)");
+                    b.Property<decimal>("AmountPaid")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
+                        .HasColumnName("amount_paid");
 
-                    b.Property<int>("InvoiceId")
-                        .HasColumnType("int");
+                    b.Property<int?>("InvoiceId")
+                        .HasColumnType("integer")
+                        .HasColumnName("invoice_id");
 
-                    b.Property<string>("Notes")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("PaymentDate")
-                        .HasColumnType("datetime2");
+                    b.Property<DateTimeOffset?>("PaymentDate")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("payment_date");
 
                     b.Property<string>("PaymentMethod")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
+                        .HasColumnName("payment_method");
 
-                    b.Property<string>("TransactionId")
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<string>("TransactionCode")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)")
+                        .HasColumnName("transaction_code");
 
                     b.HasKey("Id");
 
@@ -578,22 +710,16 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int?>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("RoleId");
 
                     b.ToTable("Permissions");
                 });
@@ -602,53 +728,53 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("BookingId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("booking_id");
 
                     b.Property<string>("Comment")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("comment");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
                     b.Property<int>("Rating")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("rating");
 
                     b.Property<string>("RejectionReason")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("rejection_reason");
 
-                    b.Property<DateTime?>("ReviewedAt")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("reviewed_at");
 
                     b.Property<int?>("ReviewedBy")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("reviewed_by");
 
                     b.Property<int?>("ReviewerId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer");
 
                     b.Property<int?>("RoomTypeId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("room_type_id");
 
                     b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)")
+                        .HasMaxLength(50)
+                        .HasColumnType("character varying(50)")
                         .HasColumnName("status");
 
                     b.Property<int?>("UserId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("user_id");
 
                     b.HasKey("Id");
@@ -657,9 +783,9 @@ namespace HotelBackend.Migrations
 
                     b.HasIndex("ReviewerId");
 
-                    b.HasIndex("UserId", "BookingId")
-                        .IsUnique()
-                        .HasFilter("[user_id] IS NOT NULL AND [booking_id] IS NOT NULL");
+                    b.HasIndex("RoomTypeId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Reviews");
                 });
@@ -668,15 +794,18 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("description");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
@@ -686,45 +815,51 @@ namespace HotelBackend.Migrations
             modelBuilder.Entity("HotelBackend.Models.RolePermission", b =>
                 {
                     b.Property<int>("RoleId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("role_id");
 
                     b.Property<int>("PermissionId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("permission_id");
 
                     b.HasKey("RoleId", "PermissionId");
 
                     b.HasIndex("PermissionId");
 
-                    b.ToTable("RolePermissions");
+                    b.ToTable("Role_Permissions");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.Room", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CleaningStatus")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("cleaning_status");
 
+                    b.Property<string>("ExtensionNumber")
+                        .HasColumnType("text")
+                        .HasColumnName("extension_number");
+
                     b.Property<int?>("Floor")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("floor");
 
                     b.Property<string>("RoomNumber")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("room_number");
 
                     b.Property<int?>("RoomTypeId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("room_type_id");
 
                     b.Property<string>("Status")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("status");
 
                     b.HasKey("Id");
@@ -737,14 +872,16 @@ namespace HotelBackend.Migrations
             modelBuilder.Entity("HotelBackend.Models.RoomAmenity", b =>
                 {
                     b.Property<int>("RoomTypeId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("room_type_id");
 
                     b.Property<int>("AmenityId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("amenity_id");
 
                     b.HasKey("RoomTypeId", "AmenityId");
+
+                    b.HasIndex("AmenityId");
 
                     b.ToTable("RoomType_Amenities");
                 });
@@ -753,30 +890,34 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("CheckIn")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset>("CheckIn")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("check_in");
 
-                    b.Property<DateTime>("CheckOut")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset>("CheckOut")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("check_out");
 
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
-                    b.Property<DateTime>("HoldExpiry")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset>("HoldExpiry")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("hold_expiry");
 
                     b.Property<int>("RoomTypeId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("room_type_id");
+
+                    b.Property<DateTimeOffset?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -789,25 +930,25 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("image_url");
 
                     b.Property<bool?>("IsActive")
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
                     b.Property<bool?>("IsPrimary")
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_primary");
 
                     b.Property<int?>("RoomTypeId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("room_type_id");
 
                     b.HasKey("Id");
@@ -821,33 +962,38 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int>("EquipmentId")
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("EquipmentId");
 
                     b.Property<bool?>("IsActive")
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
                     b.Property<string>("ItemType")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("item_type");
 
                     b.Property<string>("Note")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("note");
 
-                    b.Property<decimal>("PriceIfLost")
-                        .HasColumnType("decimal(18,2)")
+                    b.Property<decimal?>("PriceIfLost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("price_if_lost");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("int");
+                    b.Property<int?>("Quantity")
+                        .HasColumnType("integer")
+                        .HasColumnName("quantity");
 
-                    b.Property<int>("RoomId")
-                        .HasColumnType("int")
+                    b.Property<int?>("RoomId")
+                        .HasColumnType("integer")
                         .HasColumnName("room_id");
 
                     b.HasKey("Id");
@@ -863,53 +1009,55 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<decimal>("BasePrice")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("base_price");
 
                     b.Property<string>("BedType")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("bed_type");
 
                     b.Property<int>("CapacityAdults")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("capacity_adults");
 
                     b.Property<int>("CapacityChildren")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("capacity_children");
 
                     b.Property<string>("Content")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("content");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("description");
 
                     b.Property<bool?>("IsActive")
-                        .HasColumnType("bit")
+                        .HasColumnType("boolean")
                         .HasColumnName("is_active");
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("name");
 
                     b.Property<decimal?>("Size")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)")
                         .HasColumnName("size_sqm");
 
                     b.Property<string>("Slug")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("slug");
 
                     b.Property<string>("ViewType")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("view_type");
 
                     b.HasKey("Id");
@@ -921,30 +1069,31 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<int?>("CategoryId")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("category_id");
 
                     b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("description");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit")
-                        .HasColumnName("is_active");
-
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("name");
 
                     b.Property<decimal>("Price")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("price");
+
+                    b.Property<string>("Unit")
+                        .HasColumnType("text")
+                        .HasColumnName("unit");
 
                     b.HasKey("Id");
 
@@ -957,12 +1106,14 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
+                        .HasColumnType("integer")
+                        .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("text")
+                        .HasColumnName("name");
 
                     b.HasKey("Id");
 
@@ -973,42 +1124,50 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime?>("CreatedAt")
-                        .HasColumnType("datetime2")
+                    b.Property<string>("Address")
+                        .HasColumnType("text")
+                        .HasColumnName("address");
+
+                    b.Property<string>("AvatarUrl")
+                        .HasColumnType("text")
+                        .HasColumnName("avatar_url");
+
+                    b.Property<DateTimeOffset?>("CreatedAt")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("created_at");
 
+                    b.Property<DateTimeOffset?>("DateOfBirth")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("date_of_birth");
+
                     b.Property<string>("Email")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("email");
 
                     b.Property<string>("FullName")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("full_name");
 
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit")
+                    b.Property<bool?>("IsActive")
+                        .HasColumnType("boolean")
                         .HasColumnName("status");
 
                     b.Property<string>("PasswordHash")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("password_hash");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("phone");
 
-                    b.Property<int>("RoleId")
-                        .HasColumnType("int")
+                    b.Property<int?>("RoleId")
+                        .HasColumnType("integer")
                         .HasColumnName("role_id");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2")
-                        .HasColumnName("updated_at");
 
                     b.HasKey("Id");
 
@@ -1021,41 +1180,43 @@ namespace HotelBackend.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("id");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("code");
 
                     b.Property<string>("DiscountType")
-                        .HasColumnType("nvarchar(max)")
+                        .HasColumnType("text")
                         .HasColumnName("discount_type");
 
                     b.Property<decimal>("DiscountValue")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("discount_value");
 
                     b.Property<decimal?>("MinBookingValue")
-                        .HasColumnType("decimal(18,2)")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)")
                         .HasColumnName("min_booking_value");
 
                     b.Property<int?>("UsageLimit")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("usage_limit");
 
                     b.Property<int>("UsedCount")
-                        .HasColumnType("int")
+                        .HasColumnType("integer")
                         .HasColumnName("used_count");
 
-                    b.Property<DateTime?>("ValidFrom")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset?>("ValidFrom")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("valid_from");
 
-                    b.Property<DateTime?>("ValidTo")
-                        .HasColumnType("datetime2")
+                    b.Property<DateTimeOffset?>("ValidTo")
+                        .HasColumnType("timestamp with time zone")
                         .HasColumnName("valid_to");
 
                     b.HasKey("Id");
@@ -1065,10 +1226,17 @@ namespace HotelBackend.Migrations
 
             modelBuilder.Entity("HotelBackend.Models.Article", b =>
                 {
+                    b.HasOne("HotelBackend.Models.User", "Author")
+                        .WithMany()
+                        .HasForeignKey("AuthorId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("HotelBackend.Models.ArticleCategory", "Category")
                         .WithMany()
                         .HasForeignKey("CategoryId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("Author");
 
                     b.Navigation("Category");
                 });
@@ -1077,9 +1245,7 @@ namespace HotelBackend.Migrations
                 {
                     b.HasOne("HotelBackend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
@@ -1088,9 +1254,7 @@ namespace HotelBackend.Migrations
                 {
                     b.HasOne("HotelBackend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.HasOne("HotelBackend.Models.Voucher", "Voucher")
                         .WithMany()
@@ -1105,9 +1269,7 @@ namespace HotelBackend.Migrations
                 {
                     b.HasOne("HotelBackend.Models.Booking", "Booking")
                         .WithMany("BookingDetails")
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("BookingId");
 
                     b.HasOne("HotelBackend.Models.Room", "Room")
                         .WithMany("BookingDetails")
@@ -1115,9 +1277,7 @@ namespace HotelBackend.Migrations
 
                     b.HasOne("HotelBackend.Models.RoomType", "RoomType")
                         .WithMany()
-                        .HasForeignKey("RoomTypeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("RoomTypeId");
 
                     b.Navigation("Booking");
 
@@ -1130,9 +1290,7 @@ namespace HotelBackend.Migrations
                 {
                     b.HasOne("HotelBackend.Models.Booking", "Booking")
                         .WithOne("Invoice")
-                        .HasForeignKey("HotelBackend.Models.Invoice", "BookingId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("HotelBackend.Models.Invoice", "BookingId");
 
                     b.Navigation("Booking");
                 });
@@ -1143,42 +1301,52 @@ namespace HotelBackend.Migrations
                         .WithMany()
                         .HasForeignKey("BookingDetailId");
 
+                    b.HasOne("HotelBackend.Models.RoomInventory", "RoomInventory")
+                        .WithMany()
+                        .HasForeignKey("RoomInventoryId");
+
                     b.Navigation("BookingDetail");
+
+                    b.Navigation("RoomInventory");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.Membership", b =>
                 {
                     b.HasOne("HotelBackend.Models.User", "User")
+                        .WithOne("Membership")
+                        .HasForeignKey("HotelBackend.Models.Membership", "UserId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("HotelBackend.Models.Notification", b =>
+                {
+                    b.HasOne("HotelBackend.Models.User", "User")
                         .WithMany()
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("UserId");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.OrderService", b =>
                 {
-                    b.HasOne("HotelBackend.Models.Booking", "Booking")
+                    b.HasOne("HotelBackend.Models.BookingDetail", "BookingDetail")
                         .WithMany()
-                        .HasForeignKey("BookingId");
+                        .HasForeignKey("BookingDetailId");
 
-                    b.Navigation("Booking");
+                    b.Navigation("BookingDetail");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.OrderServiceDetail", b =>
                 {
                     b.HasOne("HotelBackend.Models.OrderService", "OrderService")
                         .WithMany("OrderServiceDetails")
-                        .HasForeignKey("OrderServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("OrderServiceId");
 
                     b.HasOne("HotelBackend.Models.Service", "Service")
                         .WithMany("OrderServiceDetails")
-                        .HasForeignKey("ServiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("ServiceId");
 
                     b.Navigation("OrderService");
 
@@ -1189,30 +1357,25 @@ namespace HotelBackend.Migrations
                 {
                     b.HasOne("HotelBackend.Models.Invoice", "Invoice")
                         .WithMany("Payments")
-                        .HasForeignKey("InvoiceId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("InvoiceId");
 
                     b.Navigation("Invoice");
-                });
-
-            modelBuilder.Entity("HotelBackend.Models.Permission", b =>
-                {
-                    b.HasOne("HotelBackend.Models.Role", null)
-                        .WithMany("Permissions")
-                        .HasForeignKey("RoleId");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.Review", b =>
                 {
                     b.HasOne("HotelBackend.Models.Booking", "Booking")
                         .WithMany()
-                        .HasForeignKey("BookingId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .HasForeignKey("BookingId");
 
                     b.HasOne("HotelBackend.Models.User", "Reviewer")
                         .WithMany()
                         .HasForeignKey("ReviewerId");
+
+                    b.HasOne("HotelBackend.Models.RoomType", "RoomType")
+                        .WithMany()
+                        .HasForeignKey("RoomTypeId")
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("HotelBackend.Models.User", "User")
                         .WithMany()
@@ -1222,6 +1385,8 @@ namespace HotelBackend.Migrations
                     b.Navigation("Booking");
 
                     b.Navigation("Reviewer");
+
+                    b.Navigation("RoomType");
 
                     b.Navigation("User");
                 });
@@ -1235,7 +1400,7 @@ namespace HotelBackend.Migrations
                         .IsRequired();
 
                     b.HasOne("HotelBackend.Models.Role", "Role")
-                        .WithMany()
+                        .WithMany("RolePermissions")
                         .HasForeignKey("RoleId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -1256,11 +1421,19 @@ namespace HotelBackend.Migrations
 
             modelBuilder.Entity("HotelBackend.Models.RoomAmenity", b =>
                 {
+                    b.HasOne("HotelBackend.Models.Amenity", "Amenity")
+                        .WithMany("RoomAmenities")
+                        .HasForeignKey("AmenityId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("HotelBackend.Models.RoomType", "RoomType")
                         .WithMany("RoomAmenities")
                         .HasForeignKey("RoomTypeId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("Amenity");
 
                     b.Navigation("RoomType");
                 });
@@ -1295,9 +1468,7 @@ namespace HotelBackend.Migrations
 
                     b.HasOne("HotelBackend.Models.Room", "Room")
                         .WithMany()
-                        .HasForeignKey("RoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("RoomId");
 
                     b.Navigation("Equipment");
 
@@ -1317,11 +1488,14 @@ namespace HotelBackend.Migrations
                 {
                     b.HasOne("HotelBackend.Models.Role", "Role")
                         .WithMany()
-                        .HasForeignKey("RoleId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .HasForeignKey("RoleId");
 
                     b.Navigation("Role");
+                });
+
+            modelBuilder.Entity("HotelBackend.Models.Amenity", b =>
+                {
+                    b.Navigation("RoomAmenities");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.Booking", b =>
@@ -1348,7 +1522,7 @@ namespace HotelBackend.Migrations
 
             modelBuilder.Entity("HotelBackend.Models.Role", b =>
                 {
-                    b.Navigation("Permissions");
+                    b.Navigation("RolePermissions");
                 });
 
             modelBuilder.Entity("HotelBackend.Models.Room", b =>
@@ -1373,6 +1547,11 @@ namespace HotelBackend.Migrations
             modelBuilder.Entity("HotelBackend.Models.ServiceCategory", b =>
                 {
                     b.Navigation("Services");
+                });
+
+            modelBuilder.Entity("HotelBackend.Models.User", b =>
+                {
+                    b.Navigation("Membership");
                 });
 #pragma warning restore 612, 618
         }

@@ -1,15 +1,23 @@
+// src/types/index.ts
+
 export type RoomStatus = 'Available' | 'Occupied' | 'Cleaning' | 'Reserved' | 'Held';
-export type BookingStatus = 'Pending' | 'CheckedIn' | 'CheckedOut' | 'Cancelled';
+export type BookingStatus = 'Pending' | 'Confirmed' | 'CheckedIn' | 'CheckedOut' | 'Cancelled' | 'Completed';
 export type VoucherType = 'PERCENT' | 'FIXED';
-export type PaymentMethod = 'Cash' | 'BankTransfer' | 'VNPay';
+export type PaymentMethod = 'Cash' | 'BankTransfer' | 'VNPay' | 'MoMo';
 
 export interface RoomType {
   id: number;
   name?: string;
   description?: string;
   basePrice: number;
-  maxOccupancy: number;
+  capacityAdults: number;
+  capacityChildren: number;
+  maxOccupancy?: number; // computed
   size: number;
+  bedType?: string;
+  viewType?: string;
+  slug?: string;
+  content?: string;
   isActive: boolean;
   rooms?: Room[];
   roomAmenities?: RoomAmenity[];
@@ -23,6 +31,7 @@ export interface Room {
   status: string;
   floor: number;
   cleaningStatus?: string;
+  extensionNumber?: string;
   roomType?: RoomType;
   bookingDetails?: any;
 }
@@ -41,11 +50,24 @@ export interface RoomInventory {
 
 export interface Equipment {
   id: number;
+  itemCode?: string;
   name?: string;
-  description?: string;
+  category?: string;
   unit?: string;
-  isActive: boolean;
+  totalQuantity?: number;
+  inUseQuantity?: number;
+  damagedQuantity?: number;
+  liquidatedQuantity?: number;
+  inStockQuantity?: number;
+  basePrice?: number;
+  defaultPriceIfLost?: number;
+  supplier?: string;
+  isActive?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  imageUrl?: string;
 }
+
 export interface RoomAmenity {
   id: number;
   roomTypeId: number;
@@ -66,9 +88,10 @@ export interface BookingDetail {
   id: number;
   bookingId: number;
   roomId: number;
-  checkIn: string;
-  checkOut: string;
-  price: number;
+  roomTypeId?: number;
+  checkInDate: string;
+  checkOutDate: string;
+  pricePerNight: number;
   room?: Room;
   booking?: Booking;
 }
@@ -84,25 +107,30 @@ export interface BookingService {
 
 export interface Booking {
   id: number;
-  code: string;
+  userId?: number;
+  bookingCode?: string;
   guestName: string;
   guestEmail: string;
   guestPhone: string;
-  checkIn: string;
-  checkOut: string;
+  checkInDate: string;      // map từ checkIn khi gửi request
+  checkOutDate: string;     // map từ checkOut khi gửi request
   adults: number;
   children: number;
   roomTypeId: number;
   roomIds: number[];
   roomTypeName?: string;
   status: BookingStatus;
-  totalAmount: number;
-  paidAmount: number;
+  totalEstimatedAmount: number;
+  paidAmount?: number;
+  loyaltyEarned?: number;
+  holdExpires?: string;
   voucherCode?: string;
-  paymentMethod?: PaymentMethod;
+  voucherId?: number;
+  vouchers?: Voucher;
   services: BookingService[];
-  loyaltyEarned: number;
-  holdExpires?: number;
+  bookingDetails?: BookingDetail[];
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface ServiceItem {
@@ -110,7 +138,9 @@ export interface ServiceItem {
   categoryId?: number;
   category?: string | ServiceCategory;
   name: string;
+  description?: string;
   price: number;
+  unit?: string;
   isActive: boolean;
 }
 
@@ -133,19 +163,19 @@ export interface Voucher {
 
 export interface Review {
   id: number;
-  user_id: number;
+  userId?: number;
   bookingId?: number;
-  room_type_id: number;
+  roomTypeId?: number;
   rating: number;
   comment: string;
-  created_at: string;
+  createdAt: string;
   status: 'Pending' | 'Approved' | 'Rejected';
-  guest_name?: string;
-  guest_email?: string;
-  rejection_reason?: string;
-  reviewed_by?: number;
-  reviewed_at?: string;
-  admin_name?: string;
+  guestName?: string;
+  guestEmail?: string;
+  rejectionReason?: string;
+  reviewedBy?: number;
+  reviewedAt?: string;
+  adminName?: string;
 }
 
 export interface ArticleCategory {
@@ -158,12 +188,10 @@ export interface Article {
   id: number;
   title: string;
   content: string;
-  author?: string;
-  publishedAt?: string;
-  status?: string;
-  metaTitle?: string;
-  metaDescription?: string;
   slug?: string;
+  authorId?: number;
+  publishedAt?: string;
+  isActive?: boolean;
   imageUrl?: string;
   categoryId?: number;
   category?: ArticleCategory;
@@ -173,14 +201,13 @@ export interface Attraction {
   id: number;
   name: string;
   description?: string;
-  location?: string;
   address?: string;
   latitude?: number;
   longitude?: number;
-  category?: string;
+  distanceKm?: number;
+  mapEmbedLink?: string;
   imageUrl?: string;
-  distanceFromHotel?: number;
-  isActive: boolean;
+  isActive?: boolean;
 }
 
 export interface RevenuePoint {
@@ -211,7 +238,24 @@ export interface PaymentRecord {
   createdAt: string;
 }
 
-export interface RoomAssignment {
-  roomId: number;
-  bookingCode: string;
+export interface RoomHold {
+  id: number;
+  roomTypeId: number;
+  checkIn: string;
+  checkOut: string;
+  holdExpiry: string;
+  createdAt: string;
+}
+
+export interface Invoice {
+  id: number;
+  bookingId: number;
+  totalRoomAmount: number;
+  totalServiceAmount: number;
+  discountAmount: number;
+  taxAmount: number;
+  finalTotal: number;
+  totalDamageAmount?: number;
+  status: 'Unpaid' | 'Paid' | 'Partial' | 'Refunded';
+  createdAt: string;
 }

@@ -5,30 +5,14 @@ import { Link } from 'react-router-dom';
 import { getRevenueReport } from '../../api/report';
 import { RevenuePoint } from '../../types';
 
-// Mock data
-const mockOccupancy = { rate: 78, trend: '+5%' };
-const mockCheckIns = [
-  { id: 1, guestName: 'Nguyễn Văn A', room: '101', time: '14:30' },
-  { id: 2, guestName: 'Trần Thị B', room: '205', time: '15:00' },
-  { id: 3, guestName: 'Lê Văn C', room: '312', time: '16:15' },
-];
-const mockCheckOuts = [
-  { id: 1, guestName: 'Phạm Thị D', room: '108', time: '11:00' },
-  { id: 2, guestName: 'Hoàng Văn E', room: '214', time: '12:30' },
-];
-const mockLowStock = [
-  { item: 'Khăn tắm', current: 5, min: 10 },
-  { item: 'Dầu gội', current: 3, min: 15 },
-  { item: 'Nước uống', current: 8, min: 20 },
-];
-const mockPopularVouchers = [
-  { code: 'SUMMER10', usage: 45 },
-  { code: 'WINTER15', usage: 32 },
-  { code: 'VIP20', usage: 28 },
-];
-
 const ManagerDashboard: React.FC = () => {
   const [revenueData, setRevenueData] = useState<RevenuePoint[]>([]);
+  const [occupancyRate, setOccupancyRate] = useState(78);
+  const [occupancyTrend, setOccupancyTrend] = useState('+5%');
+  const [checkIns, setCheckIns] = useState<any[]>([]);
+  const [checkOuts, setCheckOuts] = useState<any[]>([]);
+  const [lowStockItems, setLowStockItems] = useState<any[]>([]);
+  const [popularVouchers, setPopularVouchers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -82,15 +66,15 @@ const ManagerDashboard: React.FC = () => {
           <Card className="text-center p-3 border-success">
             <FaBed size={40} className="text-success mb-2" />
             <h5>Công suất phòng</h5>
-            <h3 className="text-success">{mockOccupancy.rate}%</h3>
-            <small className="text-success">Xu hướng: {mockOccupancy.trend}</small>
+            <h3 className="text-success">{occupancyRate}%</h3>
+            <small className="text-success">Xu hướng: {occupancyTrend}</small>
           </Card>
         </Col>
         <Col md={4}>
           <Card className="text-center p-3 border-warning">
             <FaExclamationTriangle size={40} className="text-warning mb-2" />
             <h5>Vật tư sắp hết</h5>
-            <h3 className="text-warning">{mockLowStock.length}</h3>
+            <h3 className="text-warning">{lowStockItems.length}</h3>
             <small>mặt hàng</small>
           </Card>
         </Col>
@@ -102,11 +86,11 @@ const ManagerDashboard: React.FC = () => {
           <Card>
             <Card.Header>
               <FaSignInAlt className="me-2" />
-              Khách check-in hôm nay ({mockCheckIns.length})
+              Khách check-in hôm nay ({checkIns.length})
             </Card.Header>
             <Card.Body>
               <ListGroup variant="flush">
-                {mockCheckIns.map(checkin => (
+                {checkIns.map(checkin => (
                   <ListGroup.Item key={checkin.id}>
                     <strong>{checkin.guestName}</strong> - Phòng {checkin.room}
                     <br />
@@ -123,11 +107,11 @@ const ManagerDashboard: React.FC = () => {
           <Card>
             <Card.Header>
               <FaSignOutAlt className="me-2" />
-              Khách trả phòng hôm nay ({mockCheckOuts.length})
+              Khách trả phòng hôm nay ({checkOuts.length})
             </Card.Header>
             <Card.Body>
               <ListGroup variant="flush">
-                {mockCheckOuts.map(checkout => (
+                {checkOuts.map(checkout => (
                   <ListGroup.Item key={checkout.id}>
                     <strong>{checkout.guestName}</strong> - Phòng {checkout.room}
                     <br />
@@ -149,7 +133,7 @@ const ManagerDashboard: React.FC = () => {
               Cảnh báo vật tư sắp hết
             </Card.Header>
             <Card.Body>
-              {mockLowStock.map((item, index) => (
+              {lowStockItems.map((item, index) => (
                 <Alert key={index} variant="warning" className="mb-2">
                   <strong>{item.item}</strong>: Còn {item.current} (tối thiểu {item.min})
                 </Alert>
@@ -169,7 +153,7 @@ const ManagerDashboard: React.FC = () => {
               Voucher phổ biến
             </Card.Header>
             <Card.Body>
-              {mockPopularVouchers.map((voucher, index) => (
+              {popularVouchers.map((voucher, index) => (
                 <div key={index} className="d-flex justify-content-between align-items-center mb-2">
                   <span><FaGift className="me-1" />{voucher.code}</span>
                   <Badge bg="info">{voucher.usage} lần</Badge>

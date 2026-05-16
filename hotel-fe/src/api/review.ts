@@ -20,8 +20,8 @@ export const getPendingReviews = async (): Promise<Review[]> => {
   });
   if (!response.ok) throw new Error('Failed to load reviews');
   const data = await response.json();
-  const reviews = data.$values || data;
-  return Array.isArray(reviews) ? reviews : [];
+  const list = (data && data.$values) ? data.$values : data;
+  return Array.isArray(list) ? list : [];
 };
 
 export const createReview = async (review: { bookingId: number; rating: number; comment: string }) => {
@@ -65,7 +65,9 @@ export const getReviews = async (status?: string): Promise<Review[]> => {
     if (response.status === 403) throw new Error('Không có quyền truy cập');
     if (!response.ok) throw new Error('Không thể lấy danh sách đánh giá');
 
-    return await response.json();
+    const data = await response.json();
+    const list = (data && data.$values) ? data.$values : data;
+    return Array.isArray(list) ? list : [];
   } catch (error) {
     console.error('Get reviews error:', error);
     throw error;
@@ -161,7 +163,9 @@ export const getReviewStats = async (): Promise<ReviewStats[]> => {
     if (response.status === 403) throw new Error('Không có quyền truy cập');
     if (!response.ok) throw new Error('Không thể lấy thống kê đánh giá');
 
-    return await response.json();
+    const data = await response.json();
+    const list = (data && data.$values) ? data.$values : data;
+    return Array.isArray(list) ? list : [];
   } catch (error) {
     console.error('Get review stats error:', error);
     throw error;

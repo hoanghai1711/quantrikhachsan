@@ -17,8 +17,9 @@ builder.WebHost.UseUrls("http://localhost:5002");
 builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
-        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.Preserve;
+        options.JsonSerializerOptions.ReferenceHandler = System.Text.Json.Serialization.ReferenceHandler.IgnoreCycles;
         options.JsonSerializerOptions.MaxDepth = 64; // tăng depth nếu cần
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
     });
 
 builder.Services.AddCors(options =>
@@ -36,7 +37,7 @@ builder.Services.AddSwaggerGen();
 
 // Database
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.Configure<MomoOptions>(builder.Configuration.GetSection("MomoAPI"));
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
@@ -65,7 +66,14 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     });
 
 // Authorization
-builder.Services.AddAuthorization();
+builder.Services.AddAuthorization(options =>
+{
+    // Add a default policy that requires authenticated users
+    options.DefaultPolicy = new AuthorizationPolicyBuilder()
+        .RequireAuthenticatedUser()
+        .Build();
+});
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
 builder.Services.AddSingleton<IAuthorizationHandler, PermissionHandler>();
 
 // SignalR
@@ -80,6 +88,7 @@ builder.Services.AddScoped<IPaymentService, PaymentService>();
 builder.Services.AddScoped<IContentService, ContentService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IHousekeepingService, HousekeepingService>();
+builder.Services.AddHostedService<RoomHoldCleanupService>(); // Background service to cleanup expired holds
 builder.Services.AddHostedService<EmailService>();
 builder.Services.AddSingleton<IEmailService, EmailService>();
 

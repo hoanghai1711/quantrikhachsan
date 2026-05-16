@@ -7,12 +7,19 @@ const getAuthHeader = () => {
   return token ? { Authorization: `Bearer ${token}` } : {};
 };
 
+const normalizeApiArray = <T>(data: any): T[] => {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.$values)) return data.$values;
+  return [];
+};
+
 export const getArticleCategories = async (): Promise<ArticleCategory[]> => {
   const response = await fetch(`${API_BASE_URL}/article-categories`, {
     headers: getAuthHeader(),
   });
   if (!response.ok) throw new Error('Không thể tải danh mục bài viết');
-  return await response.json();
+  const data = await response.json();
+  return normalizeApiArray(data);
 };
 
 export const getArticles = async (): Promise<Article[]> => {
@@ -20,7 +27,8 @@ export const getArticles = async (): Promise<Article[]> => {
     headers: getAuthHeader(),
   });
   if (!response.ok) throw new Error('Không thể tải danh sách bài viết');
-  return await response.json();
+  const data = await response.json();
+  return normalizeApiArray(data);
 };
 
 export const getArticleBySlug = async (slug: string): Promise<Article> => {
@@ -39,5 +47,6 @@ export const getAttractions = async (): Promise<Attraction[]> => {
     headers: getAuthHeader(),
   });
   if (!response.ok) throw new Error('Không thể tải danh sách điểm đến');
-  return await response.json();
+  const data = await response.json();
+  return normalizeApiArray(data);
 };

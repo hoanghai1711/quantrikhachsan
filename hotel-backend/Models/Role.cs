@@ -1,9 +1,18 @@
+using System.ComponentModel.DataAnnotations.Schema;
+
 namespace HotelBackend.Models;
+
+[Table("Roles")]
 public class Role
 {
+    [Column("id")]
     public int Id { get; set; }
+
+    [Column("name")]
     public string? Name { get; set; }
+
+    [Column("description")]
     public string? Description { get; set; }
-    // Khởi tạo collection rỗng để tránh null
-    public ICollection<Permission> Permissions { get; set; } = new List<Permission>();
+
+    public ICollection<RolePermission> RolePermissions { get; set; } = new List<RolePermission>();
 }

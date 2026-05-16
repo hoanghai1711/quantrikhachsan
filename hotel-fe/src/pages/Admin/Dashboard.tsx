@@ -1,57 +1,99 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Card, Badge, Table, Spinner, Alert } from 'react-bootstrap';
-import { FaMoneyBillWave, FaUsers, FaBed, FaClipboardList, FaStar, FaChartBar, FaUser, FaCog } from 'react-icons/fa';
+import { Row, Col, Card, Badge, Table, Spinner, Alert, Button } from 'react-bootstrap';
+import { FaMoneyBillWave, FaUsers, FaBed, FaClipboardList, FaStar, FaChartBar, FaUser, FaCog, FaSync, FaExclamationTriangle } from 'react-icons/fa';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getRevenueReport } from '../../api/report';
 import { RevenuePoint } from '../../types';
 import { Link } from 'react-router-dom';
 
 
-const mockUserStats = { totalUsers: 150, employees: 25, guests: 125 };
-const mockRoomOccupancy = { total: 50, occupied: 35, available: 15 };
-const mockRecentActivities = [
-  { id: 1, action: 'Check-in phòng 101', user: 'Nguyễn Văn A', time: '5 phút trước' },
-  { id: 2, action: 'Thanh toán đơn #1234', user: 'Trần Thị B', time: '15 phút trước' },
-  { id: 3, action: 'Đặt phòng Deluxe', user: 'Lê Văn C', time: '40 phút trước' },
-  { id: 4, action: 'Dọn dẹp phòng 205', user: 'Phạm Thị D', time: '1 giờ trước' },
-  { id: 5, action: 'Cập nhật vật tư', user: 'Hoàng Văn E', time: '2 giờ trước' },
-];
-const mockTopServices = [
-  { name: 'Dịch vụ giặt ủi', orders: 45 },
-  { name: 'Ăn sáng tại phòng', orders: 38 },
-  { name: 'Massage', orders: 25 },
-  { name: 'Thuê xe', orders: 18 },
-  { name: 'Đồ uống mini bar', orders: 12 },
-];
-const mockPendingReviews = 7;
-
 const AdminDashboard: React.FC = () => {
   const [revenueData, setRevenueData] = useState<RevenuePoint[]>([]);
+  const [userStats, setUserStats] = useState({ totalUsers: 0, employees: 0, guests: 0 });
+  const [roomOccupancy, setRoomOccupancy] = useState({ total: 0, occupied: 0, available: 0 });
+  const [recentActivities, setRecentActivities] = useState<any[]>([]);
+  const [topServices, setTopServices] = useState<any[]>([]);
+  const [pendingReviews, setPendingReviews] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [revenueError, setRevenueError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setRevenueError(null);
+
+      // Fetch revenue data
       try {
         const data = await getRevenueReport();
-        setRevenueData(data);
-      } catch (err) {
-        console.error('Error fetching revenue data:', err);
-        // Fallback to mock data
-        setRevenueData([
-          { label: 'T2', room: 1250000, service: 420000, damage: 0, total: 1670000 },
-          { label: 'T3', room: 1450000, service: 300000, damage: 0, total: 1750000 },
-          { label: 'T4', room: 1180000, service: 520000, damage: 0, total: 1700000 },
-          { label: 'T5', room: 1600000, service: 380000, damage: 0, total: 1980000 },
-          { label: 'T6', room: 1720000, service: 410000, damage: 0, total: 2130000 },
-          { label: 'T7', room: 1950000, service: 520000, damage: 0, total: 2470000 },
-          { label: 'CN', room: 1820000, service: 460000, damage: 0, total: 2280000 },
-        ]);
-      } finally {
-        setLoading(false);
+        setRevenueData(data || []);
+      } catch (revenueErr: any) {
+        console.error('Revenue fetch error:', revenueErr);
+        setRevenueError(revenueErr?.message || 'Không thể tải doanh thu');
+        setRevenueData([]);
       }
-    };
-    fetchData();
+      
+      // Fetch user stats
+      try {
+        const usersRes = await fetch('/api/users', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('hotel_token')}` },
+        });
+        if (usersRes.ok) {
+          const users = await usersRes.json();
+          const usersList = Array.isArray(users) ? users : (users?.$values || []);
+          setUserStats({
+            totalUsers: usersList.length,
+            employees: usersList.filter((u: any) => u.role === 'Employee' || u.role === 'Manager' || u.role === 'Admin').length,
+            guests: usersList.filter((u: any) => u.role === 'Customer').length
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching user stats:', err);
+      }
+      
+      // Fetch room occupancy
+      try {
+        const roomsRes = await fetch('/api/rooms', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('hotel_token')}` },
+        });
+        if (roomsRes.ok) {
+          const rooms = await roomsRes.json();
+          const roomsList = Array.isArray(rooms) ? rooms : (rooms?.$values || []);
+          const occupied = roomsList.filter((r: any) => r.status === 'Occupied').length;
+          setRoomOccupancy({
+            total: roomsList.length,
+            occupied: occupied,
+            available: roomsList.length - occupied
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching room occupancy:', err);
+      }
+      
+      // Fetch pending reviews
+      try {
+        const reviewsRes = await fetch('/api/reviews?status=Pending', {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('hotel_token')}` },
+        });
+        if (reviewsRes.ok) {
+          const reviews = await reviewsRes.json();
+          const reviewsList = Array.isArray(reviews) ? reviews : (reviews?.$values || []);
+          setPendingReviews(reviewsList.length);
+        }
+      } catch (err) {
+        console.error('Error fetching pending reviews:', err);
+      }
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError('Không thể tải một số dữ liệu');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadData();
   }, []);
 
   const totalRevenueToday = revenueData.length > 0 ? revenueData[revenueData.length - 1].total : 0;
@@ -66,44 +108,94 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  if (error) {
-    return <Alert variant="danger">{error}</Alert>;
-  }
-
   return (
-    <div>
-      <h3 className="mb-4">Admin Dashboard - Tổng quan hệ thống</h3>
+    <div className="p-3" style={{ background: '#f4f7fc', minHeight: '100vh' }}>
+      {/* Header */}
+      <Card className="shadow-lg border-0 rounded-4 overflow-hidden mb-4">
+        <Card.Body className="p-4">
+          <div className="d-flex align-items-center justify-content-between">
+            <div>
+              <h3 className="fw-bold mb-1" style={{ color: '#1e466e' }}>Dashboard</h3>
+              <p className="text-muted mb-0">Tổng quan hệ thống quản lý khách sạn</p>
+            </div>
+            <Button variant="outline-primary" size="sm" onClick={loadData}>
+              <FaSync className="me-1" /> Làm mới
+            </Button>
+          </div>
+        </Card.Body>
+      </Card>
+
+      {/* General Error Alert */}
+      {error && (
+        <Alert variant="warning" dismissible onClose={() => setError(null)} className="mb-3">
+          <FaExclamationTriangle className="me-2" /> {error}
+        </Alert>
+      )}
 
       {/* KPI Cards */}
-      <Row className="g-4 mb-4">
+      <Row className="g-3 mb-4">
         <Col md={3}>
-          <Card className="text-center p-3 border-primary">
-            <FaMoneyBillWave size={40} className="text-primary mb-2" />
-            <h5>Doanh thu hôm nay</h5>
-            <h3 className="text-primary">{totalRevenueToday.toLocaleString()} VND</h3>
+          <Card className="shadow-sm border-0 h-100">
+            <Card.Body className="p-3">
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Doanh thu hôm nay</p>
+                  <h4 className="text-primary fw-bold mb-0">{totalRevenueToday.toLocaleString()}</h4>
+                  <small className="text-muted">VND</small>
+                </div>
+                <div className="bg-primary bg-opacity-10 p-3 rounded-3">
+                  <FaMoneyBillWave size={24} className="text-primary" />
+                </div>
+              </div>
+            </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="text-center p-3 border-success">
-            <FaMoneyBillWave size={40} className="text-success mb-2" />
-            <h5>Doanh thu tháng</h5>
-            <h3 className="text-success">{totalRevenueMonth.toLocaleString()} VND</h3>
+          <Card className="shadow-sm border-0 h-100">
+            <Card.Body className="p-3">
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Doanh thu tháng</p>
+                  <h4 className="text-success fw-bold mb-0">{totalRevenueMonth.toLocaleString()}</h4>
+                  <small className="text-muted">VND</small>
+                </div>
+                <div className="bg-success bg-opacity-10 p-3 rounded-3">
+                  <FaMoneyBillWave size={24} className="text-success" />
+                </div>
+              </div>
+            </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="text-center p-3 border-info">
-            <FaUsers size={40} className="text-info mb-2" />
-            <h5>Người dùng</h5>
-            <h6>Tổng: {mockUserStats.totalUsers}</h6>
-            <small>Nhân viên: {mockUserStats.employees} | Khách: {mockUserStats.guests}</small>
+          <Card className="shadow-sm border-0 h-100">
+            <Card.Body className="p-3">
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Người dùng</p>  
+                  <h4 className="text-info fw-bold mb-0">{userStats.totalUsers}</h4>
+                  <small className="text-muted">{userStats.employees} NV, {userStats.guests} khách</small>
+                </div>
+                <div className="bg-info bg-opacity-10 p-3 rounded-3">
+                  <FaUsers size={24} className="text-info" />
+                </div>
+              </div>
+            </Card.Body>
           </Card>
         </Col>
         <Col md={3}>
-          <Card className="text-center p-3 border-warning">
-            <FaBed size={40} className="text-warning mb-2" />
-            <h5>Công suất phòng</h5>
-            <h3 className="text-warning">{Math.round((mockRoomOccupancy.occupied / mockRoomOccupancy.total) * 100)}%</h3>
-            <small>{mockRoomOccupancy.occupied}/{mockRoomOccupancy.total} phòng</small>
+          <Card className="shadow-sm border-0 h-100">
+            <Card.Body className="p-3">
+              <div className="d-flex align-items-center justify-content-between">
+                <div>
+                  <p className="text-muted mb-1" style={{ fontSize: '0.85rem' }}>Công suất phòng</p>
+                  <h4 className="text-warning fw-bold mb-0">{Math.round((roomOccupancy.occupied / Math.max(roomOccupancy.total, 1)) * 100)}%</h4>
+                  <small className="text-muted">{roomOccupancy.occupied}/{roomOccupancy.total} phòng</small>
+                </div>
+                <div className="bg-warning bg-opacity-10 p-3 rounded-3">
+                  <FaBed size={24} className="text-warning" />
+                </div>
+              </div>
+            </Card.Body>
           </Card>
         </Col>
       </Row>
@@ -111,106 +203,106 @@ const AdminDashboard: React.FC = () => {
       {/* Revenue Chart */}
       <Row className="mb-4">
         <Col>
-          <Card>
-            <Card.Header>
-              <FaChartBar className="me-2" />
-              Doanh thu 7 ngày qua
+          <Card className="shadow-lg border-0 rounded-4">
+            <Card.Header className="bg-light p-3 border-bottom">
+              <div className="d-flex align-items-center gap-2">
+                <FaChartBar className="text-info" />
+                <h5 className="mb-0 fw-bold">Doanh thu 7 ngày qua</h5>
+              </div>
             </Card.Header>
             <Card.Body>
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={revenueData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="label" />
-                  <YAxis tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} />
-                  <Tooltip formatter={(value: number) => [value.toLocaleString() + ' VND', '']} />
-                  <Bar dataKey="total" fill="#8884d8" />
-                </BarChart>
-              </ResponsiveContainer>
+              {revenueError ? (
+                <Alert variant="danger" className="mb-0">
+                  <FaExclamationTriangle className="me-2" />
+                  {revenueError}
+                  <div className="mt-2">
+                    <Button size="sm" variant="outline-danger" onClick={() => getRevenueReport().then(setRevenueData).catch(err => setRevenueError(err.message))}>
+                      <FaSync className="me-1" /> Thử lại
+                    </Button>
+                  </div>
+                </Alert>
+              ) : revenueData.length === 0 ? (
+                <Alert variant="info" className="mb-0">
+                  Không có dữ liệu doanh thu trong khoảng thời gian này
+                </Alert>
+              ) : (
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={revenueData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="label" />
+                    <YAxis tickFormatter={(value) => `${(value / 1000000).toFixed(1)}M`} />
+                    <Tooltip formatter={(value: number) => [value.toLocaleString() + ' VND', '']} />
+                    <Bar dataKey="total" fill="#0d6efd" />
+                  </BarChart>
+                </ResponsiveContainer>
+              )}
             </Card.Body>
           </Card>
         </Col>
       </Row>
 
-      <Row className="g-4">
-        {/* Recent Activities */}
-        <Col md={6}>
-          <Card>
-            <Card.Header>
-              <FaClipboardList className="me-2" />
-              Hoạt động gần đây
-            </Card.Header>
-            <Card.Body>
-              <Table striped hover>
-                <tbody>
-                  {mockRecentActivities.map(activity => (
-                    <tr key={activity.id}>
-                      <td>
-                        <strong>{activity.action}</strong><br />
-                        <small className="text-muted">{activity.user} • {activity.time}</small>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
+      <Row className="g-4 mb-4">
+        {/* Pending Reviews */}
+        <Col md={4}>
+          <Card className="shadow-lg border-0 rounded-4 text-center">
+            <Card.Body className="p-4">
+              <div className="bg-warning bg-opacity-10 p-3 rounded-3 d-inline-flex mb-3">
+                <FaStar size={32} className="text-warning" />
+              </div>
+              <h5 className="mb-2">Đánh giá chờ duyệt</h5>
+              <h2 className="text-warning fw-bold mb-3">{pendingReviews}</h2>
+              <Link to="/admin/review-moderation" className="btn btn-outline-warning btn-sm">
+                Xem chi tiết
+              </Link>
             </Card.Body>
           </Card>
         </Col>
 
         {/* Top Services */}
-        <Col md={6}>
-          <Card>
-            <Card.Header>
-              <FaStar className="me-2" />
-              Dịch vụ được đặt nhiều nhất
+        <Col md={4}>
+          <Card className="shadow-lg border-0 rounded-4">
+            <Card.Header className="bg-light p-3 border-bottom">
+              <div className="d-flex align-items-center gap-2">
+                <FaClipboardList className="text-primary" />
+                <h6 className="mb-0 fw-bold">Dịch vụ được đặt nhiều</h6>
+              </div>
             </Card.Header>
             <Card.Body>
-              {mockTopServices.map((service, index) => (
-                <div key={index} className="d-flex justify-content-between align-items-center mb-2">
-                  <span>{service.name}</span>
-                  <Badge bg="primary">{service.orders} đơn</Badge>
-                </div>
-              ))}
+              {topServices.length === 0 ? (
+                <p className="text-muted mb-0">Chưa có dữ liệu</p>
+              ) : (
+                topServices.map((service, index) => (
+                  <div key={index} className="d-flex justify-content-between align-items-center mb-2">
+                    <span style={{ fontSize: '0.9rem' }}>{service.name}</span>
+                    <Badge bg="primary">{service.orders}</Badge>
+                  </div>
+                ))
+              )}
             </Card.Body>
           </Card>
         </Col>
-      </Row>
 
-      {/* Pending Reviews Badge */}
-      <Row className="mt-4">
-        <Col>
-          <Card className="text-center p-3">
-            <FaStar size={30} className="text-warning mb-2" />
-            <h5>Đánh giá chờ duyệt</h5>
-            <Badge bg="danger" className="fs-4 p-2">{mockPendingReviews}</Badge>
-            <br />
-            <Link to="/admin/review-moderation" className="btn btn-outline-primary mt-2">
-              Xem chi tiết
-            </Link>
+        {/* Quick Links */}
+        <Col md={4}>
+          <Card className="shadow-lg border-0 rounded-4">
+            <Card.Header className="bg-light p-3 border-bottom">
+              <h6 className="mb-0 fw-bold">Điều hướng nhanh</h6>
+            </Card.Header>
+            <Card.Body className="d-flex flex-column gap-2 p-2">
+              <Link to="/admin/users" className="btn btn-outline-primary btn-sm">
+                <FaUser size={14} className="me-1" /> Quản lý nhân viên
+              </Link>
+              <Link to="/admin/permissions" className="btn btn-outline-secondary btn-sm">
+                <FaCog size={14} className="me-1" /> Phân quyền
+              </Link>
+              <Link to="/admin/services" className="btn btn-outline-success btn-sm">
+                <FaClipboardList size={14} className="me-1" /> Dịch vụ
+              </Link>
+              <Link to="/admin/vouchers" className="btn btn-outline-warning btn-sm">
+                <FaMoneyBillWave size={14} className="me-1" /> Voucher
+              </Link>
+            </Card.Body>
           </Card>
-        </Col>
-      </Row>
-
-      {/* Quick Navigation */}
-      <Row className="mt-4">
-        <Col>
-          <h5>Điều hướng nhanh</h5>
-          <div className="d-flex flex-wrap gap-2">
-            <Link to="/admin/users" className="btn btn-outline-primary me-2">
-              <FaUser className="me-1" /> Quản lý người dùng
-            </Link>
-            <Link to="/admin/permissions" className="btn btn-outline-secondary me-2">
-              <FaCog className="me-1" /> Phân quyền
-            </Link>
-            <Link to="/admin/services" className="btn btn-outline-success me-2">
-              Dịch vụ
-            </Link>
-            <Link to="/admin/vouchers" className="btn btn-outline-info me-2">
-              Voucher
-            </Link>
-            <Link to="/admin/reports" className="btn btn-outline-warning">
-              Báo cáo
-            </Link>
-          </div>
         </Col>
       </Row>
     </div>
@@ -218,3 +310,4 @@ const AdminDashboard: React.FC = () => {
 };
 
 export default AdminDashboard;
+        

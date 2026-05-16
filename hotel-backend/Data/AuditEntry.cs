@@ -19,7 +19,7 @@ public class AuditEntry
     public Dictionary<string, object?> NewValues { get; } = new Dictionary<string, object?>();
     public List<PropertyEntry> TemporaryProperties { get; } = new List<PropertyEntry>();
     public bool HasTemporaryProperties => TemporaryProperties.Any();
-    public int UserId { get; set; }
+    public int? UserId { get; set; }
     public string? IpAddress { get; set; }
 
     public AuditLog ToAudit()
@@ -41,14 +41,13 @@ public class AuditEntry
 
         var audit = new AuditLog
         {
-            UserId = UserId,
+            UserId = UserId > 0 ? UserId : null,
             Action = action,
             TableName = TableName,
-            RecordId = recordId,
+            RecordId = int.TryParse(recordId, out var id) ? id : 0,
             OldValues = OldValues.Count == 0 ? null : System.Text.Json.JsonSerializer.Serialize(OldValues),
             NewValues = NewValues.Count == 0 ? null : System.Text.Json.JsonSerializer.Serialize(NewValues),
-            Timestamp = DateTime.UtcNow,
-            IpAddress = IpAddress
+            Timestamp = DateTime.UtcNow
         };
         return audit;
     }

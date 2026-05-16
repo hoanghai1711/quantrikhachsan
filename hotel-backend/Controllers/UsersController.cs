@@ -11,6 +11,7 @@ namespace HotelBackend.Controllers
 {
     [ApiController]
     [Route("api/users")]
+    [Authorize]
     public class UsersController : ControllerBase
     {
         private readonly IUserService _userService;
@@ -20,6 +21,15 @@ namespace HotelBackend.Controllers
         {
             _userService = userService;
             _context = context;
+        }
+
+        [HttpGet]
+        [Authorize(Roles = "Admin,Manager")]
+        public async Task<IActionResult> GetUsers()
+        {
+            var users = await _userService.GetUsersAsync();
+            var result = users.Select(u => MapUserDto(u));
+            return Ok(result);
         }
 
         [HttpGet("staff")]

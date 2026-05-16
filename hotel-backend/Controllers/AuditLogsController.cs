@@ -31,11 +31,13 @@ namespace HotelBackend.Controllers
             var result = logs.Select(log => new
             {
                 id = log.Id,
+                user_id = log.UserId,          // snake_case
                 action = log.Action,
-                tableName = log.TableName,
-                recordId = log.RecordId,
-                userId = log.UserId,
-                timestamp = log.Timestamp
+                table_name = log.TableName,    // snake_case
+                record_id = log.RecordId,      // snake_case
+                old_value = log.OldValues,
+                new_value = log.NewValues,
+                created_at = log.Timestamp     // snake_case
             });
             return Ok(result);
         }

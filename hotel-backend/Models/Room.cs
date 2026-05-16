@@ -54,30 +54,33 @@ namespace HotelBackend.Models
     }
 
     [Table("Rooms")]
-    public class Room
-    {
-        [Column("id")]
-        public int Id { get; set; }
+public class Room
+{
+    [Column("id")]
+    public int Id { get; set; }
 
-        [Column("room_type_id")]
-        public int? RoomTypeId { get; set; }
+    [Column("room_type_id")]
+    public int? RoomTypeId { get; set; }
 
-        [Column("room_number")]
-        public string? RoomNumber { get; set; }
+    [Column("room_number")]
+    public string? RoomNumber { get; set; }
 
-        [Column("status")]
-        public string? Status { get; set; }
+    [Column("floor")]
+    public int? Floor { get; set; }
 
-        [Column("floor")]
-        public int? Floor { get; set; }
-        [Column("cleaning_status")]
-        public string? CleaningStatus { get; set; }
-        
-    
+    [Column("status")]
+    public string? Status { get; set; }
 
-        public RoomType? RoomType { get; set; }
-        public ICollection<BookingDetail>? BookingDetails { get; set; }
-    }
+    [Column("cleaning_status")]
+    public string? CleaningStatus { get; set; }
+
+    [Column("extension_number")]
+    public string? ExtensionNumber { get; set; }
+
+    // Navigation properties
+    public RoomType? RoomType { get; set; }
+    public ICollection<BookingDetail>? BookingDetails { get; set; }
+}
 
     [Table("RoomType_Amenities")]
     public class RoomAmenity
@@ -89,6 +92,7 @@ namespace HotelBackend.Models
         public int AmenityId { get; set; }
 
         public RoomType? RoomType { get; set; }
+        public Amenity? Amenity { get; set; }
     }
 
     [Table("Room_Images")]

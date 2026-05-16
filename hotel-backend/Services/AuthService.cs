@@ -28,8 +28,9 @@ namespace HotelBackend.Services
         {
             var user = await _context.Users
                 .Include(u => u.Role)
-                    .ThenInclude(r => r.Permissions)
-                .FirstOrDefaultAsync(u => u.Email == email && u.IsActive);
+                    .ThenInclude(r => r.RolePermissions)
+                        .ThenInclude(rp => rp.Permission)
+                .FirstOrDefaultAsync(u => u.Email == email && u.IsActive == true);
 
             if (user == null)
                 return (false, string.Empty, "Email không tồn tại hoặc tài khoản bị khóa", null);
@@ -69,8 +70,7 @@ namespace HotelBackend.Services
             {
                 guestRole = new Role
                 {
-                    Name = "Guest",
-                    Description = "Khách hàng"
+                    Name = "Guest"
                 };
                 _context.Roles.Add(guestRole);
                 await _context.SaveChangesAsync();
@@ -107,13 +107,13 @@ namespace HotelBackend.Services
                 new Claim("Phone", user.Phone ?? "")
             };
 
-            if (user.Role?.Permissions != null)
+            if (user.Role?.RolePermissions != null)
             {
-                foreach (var permission in user.Role.Permissions)
+                foreach (var rolePermission in user.Role.RolePermissions)
                 {
-                    if (!string.IsNullOrWhiteSpace(permission.Name))
+                    if (!string.IsNullOrWhiteSpace(rolePermission.Permission?.Name))
                     {
-                        claims.Add(new Claim("permission", permission.Name));
+                        claims.Add(new Claim("permission", rolePermission.Permission.Name));
                     }
                 }
             }

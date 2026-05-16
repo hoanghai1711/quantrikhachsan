@@ -43,14 +43,14 @@ const BookingList: React.FC = () => {
               <tr><td colSpan={8} className="text-center py-4">Chưa có booking</td></tr>
             ) : bookings.map(booking => (
               <tr key={booking.id}>
-                <td>{booking.code}</td>
+                <td>{booking.bookingCode}</td>
                 <td>{booking.guestName}</td>
                 <td>{booking.guestPhone}</td>
                 <td>{booking.roomTypeName || booking.roomTypeId}</td>
-                <td>{booking.checkIn}</td>
-                <td>{booking.checkOut}</td>
+                <td>{booking.checkInDate}</td>
+                <td>{booking.checkOutDate}</td>
                 <td><Badge bg={booking.status === 'CheckedIn' ? 'success' : booking.status === 'Cancelled' ? 'danger' : 'secondary'}>{booking.status}</Badge></td>
-                <td>{booking.totalAmount?.toLocaleString?.() ?? 0} VND</td>
+                <td>{booking.totalEstimatedAmount?.toLocaleString?.() ?? 0} VND</td>
               </tr>
             ))}
           </tbody>

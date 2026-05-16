@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Card, Spinner, Alert, Button } from 'react-bootstrap';
 import { showToast } from '../../components/common/ToastNotification';
-import { getInvoice } from '../../api/booking';
+import { checkIn, getInvoice } from '../../api/booking';
 import { Check, X } from 'react-feather';
 
 const MoMoCallback: React.FC = () => {
@@ -17,6 +17,8 @@ const MoMoCallback: React.FC = () => {
       try {
         // Lấy từ localStorage
         const savedBookingId = localStorage.getItem('momo_booking_id');
+        const checkinBookingId = localStorage.getItem('momo_checkin_booking_id');
+        const checkinRoomIds = localStorage.getItem('momo_checkin_room_ids');
 
         if (!savedBookingId) {
           setStatus('failure');
@@ -42,9 +44,20 @@ const MoMoCallback: React.FC = () => {
           setStatus('success');
           showToast('success', 'Thanh toán MoMo thành công');
 
+          if (checkinBookingId && checkinRoomIds) {
+            const bookingIdNum = Number(checkinBookingId);
+            const roomIds = JSON.parse(checkinRoomIds) as number[];
+            if (bookingIdNum && Array.isArray(roomIds) && roomIds.length > 0) {
+              await checkIn(bookingIdNum, roomIds);
+              showToast('success', 'Check-in thành công');
+            }
+          }
+
           // Xóa localStorage
           localStorage.removeItem('momo_invoice_id');
           localStorage.removeItem('momo_booking_id');
+          localStorage.removeItem('momo_checkin_booking_id');
+          localStorage.removeItem('momo_checkin_room_ids');
         } else {
           setStatus('failure');
           showToast('danger', `Thanh toán thất bại: ${message || resultCode}`);
@@ -59,12 +72,8 @@ const MoMoCallback: React.FC = () => {
     handleCallback();
   }, [searchParams]);
 
-  const handleReturnCheckout = () => {
-    if (bookingId) {
-      navigate(`/checkout?booking=${bookingId}`);
-    } else {
-      navigate('/checkout');
-    }
+  const handleReturnReception = () => {
+    navigate('/check-in');
   };
 
   return (
@@ -95,8 +104,8 @@ const MoMoCallback: React.FC = () => {
                   <p className="mb-0"><strong>Trạng thái:</strong> {invoice.status}</p>
                 </div>
               )}
-              <Button variant="primary" size="lg" onClick={handleReturnCheckout} className="mt-4 w-100">
-                Quay lại trang thanh toán
+              <Button variant="primary" size="lg" onClick={handleReturnReception} className="mt-4 w-100">
+                Quay lại quầy lễ tân
               </Button>
             </>
           )}
@@ -112,7 +121,7 @@ const MoMoCallback: React.FC = () => {
                 Hãy kiểm tra lại tài khoản MoMo của bạn và thử thanh toán lại.
               </Alert>
               <div className="d-flex gap-2 mt-4">
-                <Button variant="secondary" size="lg" onClick={handleReturnCheckout} className="flex-grow-1">
+                <Button variant="secondary" size="lg" onClick={handleReturnReception} className="flex-grow-1">
                   Quay lại
                 </Button>
                 <Button variant="danger" size="lg" onClick={() => window.location.href = '/'} className="flex-grow-1">

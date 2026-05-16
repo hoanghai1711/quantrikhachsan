@@ -1,38 +1,25 @@
-import React, { useState } from 'react';
-import { Row, Col, Card, Button, ListGroup, Form, InputGroup, Table, Badge, Alert } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Card, Button, ListGroup, Form, InputGroup, Table, Badge, Alert, Spinner } from 'react-bootstrap';
 import { FaSignInAlt, FaBed, FaSearch, FaClock, FaCreditCard, FaPlus, FaEye } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
-
-// Mock data
-const mockTodayCheckins = [
-  { id: 1, code: 'BK001', guestName: 'Nguyễn Văn A', room: '101', checkInTime: '14:00' },
-  { id: 2, code: 'BK002', guestName: 'Trần Thị B', room: '205', checkInTime: '15:30' },
-  { id: 3, code: 'BK003', guestName: 'Lê Văn C', room: '312', checkInTime: '16:00' },
-];
-const mockAvailableRooms = [
-  { type: 'Standard', available: 5, total: 20 },
-  { type: 'Deluxe', available: 3, total: 15 },
-  { type: 'Suite', available: 1, total: 5 },
-];
-const mockRecentBookings = [
-  { id: 1, code: 'BK001', guestName: 'Nguyễn Văn A', checkIn: '2024-04-10', status: 'CheckedIn' },
-  { id: 2, code: 'BK002', guestName: 'Trần Thị B', checkIn: '2024-04-10', status: 'Pending' },
-  { id: 3, code: 'BK003', guestName: 'Lê Văn C', checkIn: '2024-04-09', status: 'CheckedOut' },
-  { id: 4, code: 'BK004', guestName: 'Phạm Thị D', checkIn: '2024-04-09', status: 'CheckedOut' },
-  { id: 5, code: 'BK005', guestName: 'Hoàng Văn E', checkIn: '2024-04-08', status: 'Cancelled' },
-];
-const mockPendingPayments = 3;
+import { getBookings } from '../../api/booking';
+import { getRooms } from '../../api/rooms';
+import { showToast } from '../../components/common/ToastNotification';
 
 const ReceptionistDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [todayCheckins, setTodayCheckins] = useState<any[]>([]);
+  const [availableRooms, setAvailableRooms] = useState<any[]>([]);
+  const [recentBookings, setRecentBookings] = useState<any[]>([]);
+  const [pendingPayments, setPendingPayments] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    // Mock search logic
     if (searchQuery) {
-      const results = mockRecentBookings.filter(booking =>
-        booking.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      const results = recentBookings.filter(booking =>
+        booking.bookingCode?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         booking.guestName.toLowerCase().includes(searchQuery.toLowerCase())
       );
       setSearchResults(results);
@@ -68,6 +55,9 @@ const ReceptionistDashboard: React.FC = () => {
             <Link to="/receptionist/booking" className="btn btn-info">
               <FaPlus className="me-1" /> Đặt phòng mới
             </Link>
+            <Link to="/receptionist/create-booking" className="btn btn-success me-2">
+            <FaPlus className="me-1" /> Tạo phòng mới
+            </Link>
           </div>
         </Col>
       </Row>
@@ -78,11 +68,11 @@ const ReceptionistDashboard: React.FC = () => {
           <Card>
             <Card.Header>
               <FaSignInAlt className="me-2" />
-              Khách check-in hôm nay ({mockTodayCheckins.length})
+              Khách check-in hôm nay ({todayCheckins.length})
             </Card.Header>
             <Card.Body>
               <ListGroup variant="flush">
-                {mockTodayCheckins.map(checkin => (
+                {todayCheckins.map(checkin => (
                   <ListGroup.Item key={checkin.id} className="d-flex justify-content-between align-items-center">
                     <div>
                       <strong>{checkin.guestName}</strong> - {checkin.code}
@@ -107,7 +97,7 @@ const ReceptionistDashboard: React.FC = () => {
               Phòng trống theo loại
             </Card.Header>
             <Card.Body>
-              {mockAvailableRooms.map((roomType, index) => (
+              {availableRooms.map((roomType, index) => (
                 <div key={index} className="d-flex justify-content-between align-items-center mb-2">
                   <span>{roomType.type}</span>
                   <Badge bg="success">{roomType.available}/{roomType.total}</Badge>
@@ -185,11 +175,11 @@ const ReceptionistDashboard: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {mockRecentBookings.map(booking => (
+                  {recentBookings.map(booking => (
                     <tr key={booking.id}>
-                      <td>{booking.code}</td>
+                      <td>{booking.bookingCode}</td>
                       <td>{booking.guestName}</td>
-                      <td>{booking.checkIn}</td>
+                      <td>{booking.checkInDate}</td>
                       <td>{getStatusBadge(booking.status)}</td>
                       <td>
                         <Link to={`/receptionist/booking/${booking.id}`} className="btn btn-outline-primary btn-sm">
@@ -212,7 +202,7 @@ const ReceptionistDashboard: React.FC = () => {
               Thanh toán chờ xử lý
             </Card.Header>
             <Card.Body>
-              <h1 className="text-danger">{mockPendingPayments}</h1>
+              <h1 className="text-danger">{pendingPayments}</h1>
               <p>booking chưa thanh toán</p>
               <Alert variant="warning">
                 <small>Cần xử lý ngay để tránh chậm trễ</small>

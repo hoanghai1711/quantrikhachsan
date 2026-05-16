@@ -5,7 +5,8 @@ import type { IconType } from 'react-icons';
 import {
   FaHome, FaSearch, FaClipboardCheck, FaStore, FaFileAlt, FaChartLine,
   FaTicketAlt, FaStar, FaBed, FaConciergeBell, FaBoxes, FaHistory,
-  FaUsers, FaShieldAlt, FaChevronLeft, FaChevronRight
+  FaUsers, FaShieldAlt, FaChevronLeft, FaChevronRight, FaPlus, FaClipboardList,
+  FaSignOutAlt
 } from 'react-icons/fa';
 import { useAuth } from '../../hooks/useAuth';
 import { hasPermission } from '../../utils/permissions';
@@ -30,8 +31,10 @@ const menuItems: MenuItem[] = [
   { path: '/search-room', label: 'Tìm phòng', icon: FaSearch, permission: 'VIEW_ROOMS' },
   { path: '/room-cleaning', label: 'Dọn phòng', icon: FaBed, permission: 'CLEAN_ROOMS' },
   { path: '/check-in', label: 'Check-in', icon: FaClipboardCheck, permission: 'CHECK_IN' },
+  { path: '/receptionist/create-booking', label: 'Tạo đơn đặt phòng', icon: FaPlus, permission: 'CHECK_IN' },
+  { path: '/check-out', label: 'Check-out khách', icon: FaSignOutAlt, permission: 'CHECK_IN' },
+  { path: '/orders', label: 'Danh sách đơn', icon: FaClipboardList, permission: 'VIEW_BOOKINGS' },
   { path: '/pos', label: 'POS dịch vụ', icon: FaStore, permission: 'MANAGE_POS' },
-  { path: '/orders', label: 'Danh sách đơn', icon: FaFileAlt, permission: 'VIEW_BOOKINGS' },
   { path: '/reports', label: 'Báo cáo doanh thu', icon: FaChartLine, permission: 'VIEW_REPORTS' },
   { path: '/vouchers', label: 'Quản lý voucher', icon: FaTicketAlt, permission: 'MANAGE_VOUCHERS' },
   { path: '/reviews', label: 'Duyệt đánh giá', icon: FaStar, permission: 'REVIEW_MODERATION' },
@@ -41,6 +44,7 @@ const menuItems: MenuItem[] = [
   { path: '/activity-log', label: 'Nhật ký hoạt động', icon: FaHistory, permission: 'VIEW_AUDIT_LOG' },
   { path: '/user-management', label: 'Quản lý nhân sự', icon: FaUsers, permission: 'MANAGE_STAFF' },
   { path: '/permissions', label: 'Phân quyền vai trò', icon: FaShieldAlt, permission: 'MANAGE_ROLES' },
+  { path: '/receptionist/rooms', label: 'Quản lý phòng', icon: FaBed, permission: 'VIEW_ROOMS' }
 ];
 
 const Sidebar: React.FC<SidebarProps> = ({ collapsed, showMobile, onToggle, onCloseMobile }) => {
@@ -51,23 +55,22 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, showMobile, onToggle, onCl
   );
 
   const renderMenu = () => (
-    <Nav className="flex-column p-2">
+    <Nav className="flex-column px-2 py-3">
       {filteredItems.map((item) => {
         const Icon = item.icon;
         return (
-          <Nav.Item key={item.path}>
+          <Nav.Item key={item.path} className="mb-1">
             <NavLink
               to={item.path}
               className={({ isActive }) =>
-                `d-flex align-items-center gap-3 py-2 px-3 rounded mb-1 text-decoration-none ${
-                  isActive ? 'bg-light fw-bold' : 'text-dark'
+                `${styles.navLink} d-flex align-items-center gap-3 px-3 py-2 rounded-3 text-decoration-none transition-all ${
+                  isActive ? styles.active : ''
                 }`
               }
-              style={{ color: 'inherit' }}
               onClick={onCloseMobile}
             >
-              <Icon size={20} />
-              {!collapsed && <span>{item.label}</span>}
+              <Icon className={styles.icon} size={20} />
+              {!collapsed && <span className={styles.label}>{item.label}</span>}
             </NavLink>
           </Nav.Item>
         );
@@ -77,22 +80,37 @@ const Sidebar: React.FC<SidebarProps> = ({ collapsed, showMobile, onToggle, onCl
 
   return (
     <>
-      <div className={`bg-white shadow-sm h-100 position-fixed start-0 top-0 border-end ${styles.sidebarContainer} ${collapsed ? styles.sidebarCollapsed : ''}`}
-           style={{ zIndex: 1000 }}>
-        <div className="d-flex align-items-center justify-content-between p-3 border-bottom">
-          {!collapsed && <h5 className="mb-0 text-primary">Hotel ERP</h5>}
-          <button className="btn btn-sm btn-light rounded-circle" onClick={onToggle}>
+      {/* Desktop Sidebar */}
+      <div 
+        className={`bg-dark text-white h-100 position-fixed start-0 top-0 ${styles.sidebarContainer} ${collapsed ? styles.sidebarCollapsed : ''}`}
+        style={{ zIndex: 1000 }}
+      >
+        <div className={`d-flex align-items-center justify-content-between p-3 border-bottom border-secondary ${styles.header}`}>
+          {!collapsed && <h5 className="mb-0 fw-bold text-gradient">🏨 Hotel ERP</h5>}
+          <button 
+            className={`btn btn-sm rounded-circle ${styles.toggleBtn}`} 
+            onClick={onToggle}
+          >
             {collapsed ? <FaChevronRight /> : <FaChevronLeft />}
           </button>
         </div>
         {renderMenu()}
       </div>
 
-      <Offcanvas show={showMobile} onHide={onCloseMobile} backdrop scroll={false}>
-        <Offcanvas.Header closeButton>
-          <Offcanvas.Title>Hotel ERP</Offcanvas.Title>
+      {/* Mobile Offcanvas */}
+      <Offcanvas 
+        show={showMobile} 
+        onHide={onCloseMobile} 
+        backdrop 
+        scroll={false}
+        className={styles.mobileOffcanvas}
+      >
+        <Offcanvas.Header closeButton className="border-bottom border-secondary bg-dark text-white">
+          <Offcanvas.Title className="fw-bold">🏨 Hotel ERP</Offcanvas.Title>
         </Offcanvas.Header>
-        <Offcanvas.Body>{renderMenu()}</Offcanvas.Body>
+        <Offcanvas.Body className="bg-dark p-0">
+          {renderMenu()}
+        </Offcanvas.Body>
       </Offcanvas>
     </>
   );

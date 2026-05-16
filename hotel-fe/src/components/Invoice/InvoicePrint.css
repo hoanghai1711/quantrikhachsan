@@ -1,0 +1,105 @@
+.invoice-print-container {
+  padding: 20px;
+  background: #f5f5f5;
+  border-radius: 8px;
+}
+
+.invoice-controls {
+  background: white;
+  padding: 15px;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.invoice-document {
+  background: white;
+  padding: 40px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 800px;
+  margin: 0 auto;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.invoice-content {
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+  color: #333;
+}
+
+.invoice-header {
+  margin-bottom: 20px;
+}
+
+.invoice-header h2 {
+  font-size: 20px;
+  font-weight: bold;
+  margin: 0;
+  color: #1e466e;
+}
+
+.invoice-header p {
+  margin: 5px 0;
+  color: #555;
+}
+
+/* Print styles */
+@media print {
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+  }
+
+  .invoice-print-container {
+    background: white;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .invoice-controls {
+    display: none !important;
+  }
+
+  .invoice-document {
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+    max-width: 100%;
+    page-break-after: always;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  /* Ensure proper page breaks */
+  .invoice-content {
+    page-break-inside: avoid;
+  }
+
+  /* A4 paper size optimization */
+  @page {
+    size: A4;
+    margin: 10mm;
+  }
+
+  hr {
+    page-break-after: avoid;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .invoice-document {
+    padding: 20px;
+  }
+
+  .invoice-header h2 {
+    font-size: 18px;
+  }
+
+  .invoice-content {
+    font-size: 12px;
+  }
+}

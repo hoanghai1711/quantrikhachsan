@@ -1,45 +1,31 @@
-import React, { useState } from 'react';
-import { Row, Col, Card, Button, ListGroup, Badge, Alert, ProgressBar } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Card, Button, ListGroup, Badge, Alert, ProgressBar, Spinner } from 'react-bootstrap';
 import { FaBroom, FaChartPie, FaExclamationTriangle, FaTh, FaCheck } from 'react-icons/fa';
-
-// Mock data
-const mockRoomsToClean = [
-  { id: 1, number: '101', floor: '1', type: 'Standard', priority: 'Normal' },
-  { id: 2, number: '205', floor: '2', type: 'Deluxe', priority: 'Urgent' },
-  { id: 3, number: '312', floor: '3', type: 'Suite', priority: 'Normal' },
-  { id: 4, number: '108', floor: '1', type: 'Standard', priority: 'Normal' },
-];
-const mockCleaningProgress = { completed: 12, total: 15, percentage: 80 };
-const mockUrgentRequests = [
-  { id: 1, room: '205', request: 'Khách yêu cầu thêm khăn tắm gấp', time: '10:30' },
-  { id: 2, room: '312', request: 'Dọn phòng trước 14:00', time: '11:15' },
-];
-const mockRoomStatuses = [
-  { floor: 1, rooms: [
-    { number: '101', status: 'cleaning' },
-    { number: '102', status: 'available' },
-    { number: '103', status: 'occupied' },
-    { number: '104', status: 'maintenance' },
-    { number: '105', status: 'available' },
-  ]},
-  { floor: 2, rooms: [
-    { number: '201', status: 'occupied' },
-    { number: '202', status: 'available' },
-    { number: '203', status: 'cleaning' },
-    { number: '204', status: 'occupied' },
-    { number: '205', status: 'cleaning' },
-  ]},
-  { floor: 3, rooms: [
-    { number: '301', status: 'available' },
-    { number: '302', status: 'occupied' },
-    { number: '303', status: 'maintenance' },
-    { number: '304', status: 'available' },
-    { number: '305', status: 'cleaning' },
-  ]},
-];
+import { fetchCleaningRooms, getRooms } from '../../api/rooms';
+import { showToast } from '../../components/common/ToastNotification';
 
 const HousekeepingDashboard: React.FC = () => {
-  const [roomsToClean, setRoomsToClean] = useState(mockRoomsToClean);
+  const [roomsToClean, setRoomsToClean] = useState<any[]>([]);
+  const [allRooms, setAllRooms] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const loadData = async () => {
+    try {
+      const cleaningRooms = await fetchCleaningRooms();
+      setRoomsToClean(cleaningRooms);
+      const rooms = await getRooms();
+      setAllRooms(rooms);
+    } catch (error) {
+      console.error('Error loading housekeeping data:', error);
+      showToast('danger', 'Không thể tải dữ liệu');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -62,14 +48,35 @@ const HousekeepingDashboard: React.FC = () => {
   };
 
   const handleCompleteCleaning = (roomId: number) => {
-    // Mock API call to update room status
-    console.log(`Updating room ${roomId} status to available`);
     setRoomsToClean(prev => prev.filter(room => room.id !== roomId));
-    // In real app: call updateRoomStatus(roomId, 'available')
+    showToast('success', 'Đã hoàn tất dọn phòng');
+  };
+
+  const getCleaningProgress = () => {
+    const total = allRooms.length;
+    const cleaned = allRooms.filter(r => r.status !== 'Cleaning' && r.status !== 'Reserved').length;
+    return {
+      completed: cleaned,
+      total: total,
+      percentage: total > 0 ? Math.round((cleaned / total) * 100) : 0
+    };
   };
 
   const getPriorityBadge = (priority: string) => {
     return priority === 'Urgent' ? <Badge bg="danger">Gấp</Badge> : <Badge bg="secondary">Bình thường</Badge>;
+  };
+
+  const getRoomsByFloor = () => {
+    const grouped: any = {};
+    allRooms.forEach(room => {
+      const floor = room.floor || 1;
+      if (!grouped[floor]) grouped[floor] = [];
+      grouped[floor].push(room);
+    });
+    return Object.keys(grouped).map(floor => ({
+      floor: parseInt(floor),
+      rooms: grouped[floor]
+    })).sort((a, b) => a.floor - b.floor);
   };
 
   return (
@@ -117,10 +124,10 @@ const HousekeepingDashboard: React.FC = () => {
             </Card.Header>
             <Card.Body>
               <div className="text-center mb-3">
-                <h2 className="text-primary">{mockCleaningProgress.completed}/{mockCleaningProgress.total}</h2>
+                <h2 className="text-primary">{getCleaningProgress().completed}/{getCleaningProgress().total}</h2>
                 <p>phòng đã dọn</p>
               </div>
-              <ProgressBar now={mockCleaningProgress.percentage} label={`${mockCleaningProgress.percentage}%`} />
+              <ProgressBar now={getCleaningProgress().percentage} label={`${getCleaningProgress().percentage}%`} />
               <small className="text-muted mt-2 d-block">
                 Mục tiêu: Hoàn thành trước 18:00
               </small>
@@ -128,29 +135,6 @@ const HousekeepingDashboard: React.FC = () => {
           </Card>
         </Col>
       </Row>
-
-      {/* Urgent Requests */}
-      {mockUrgentRequests.length > 0 && (
-        <Row className="mb-4">
-          <Col>
-            <Card border="warning">
-              <Card.Header>
-                <FaExclamationTriangle className="me-2 text-warning" />
-                Yêu cầu gấp từ khách ({mockUrgentRequests.length})
-              </Card.Header>
-              <Card.Body>
-                {mockUrgentRequests.map(request => (
-                  <Alert key={request.id} variant="warning" className="mb-2">
-                    <strong>Phòng {request.room}:</strong> {request.request}
-                    <br />
-                    <small className="text-muted">{request.time}</small>
-                  </Alert>
-                ))}
-              </Card.Body>
-            </Card>
-          </Col>
-        </Row>
-      )}
 
       {/* Room Status Grid */}
       <Row>
@@ -161,25 +145,21 @@ const HousekeepingDashboard: React.FC = () => {
               Trạng thái phòng theo tầng
             </Card.Header>
             <Card.Body>
-              {mockRoomStatuses.map(floor => (
-                <div key={floor.floor} className="mb-4">
-                  <h5>Tầng {floor.floor}</h5>
-                  <Row className="g-2">
-                    {floor.rooms.map(room => (
-                      <Col key={room.number} xs={6} sm={4} md={2}>
-                        <div
-                          className={`p-2 text-center border rounded bg-${getStatusColor(room.status)} text-white`}
-                          style={{ minHeight: '60px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                        >
-                          <div>
-                            <strong>{room.number}</strong>
-                            <br />
-                            <small>{getStatusText(room.status)}</small>
-                          </div>
-                        </div>
-                      </Col>
+              {getRoomsByFloor().map(floorData => (
+                <div key={floorData.floor} className="mb-4">
+                  <h5>Tầng {floorData.floor}</h5>
+                  <div className="d-flex flex-wrap gap-2">
+                    {floorData.rooms.map(room => (
+                      <Badge
+                        key={room.id}
+                        bg={getStatusColor(room.status)}
+                        className="p-2"
+                        style={{ minWidth: '60px' }}
+                      >
+                        {room.roomNumber}
+                      </Badge>
                     ))}
-                  </Row>
+                  </div>
                 </div>
               ))}
             </Card.Body>

@@ -143,6 +143,7 @@ namespace HotelBackend.Controllers
         }
 
         [HttpGet]
+        [AllowAnonymous]
         public async Task<IActionResult> GetRooms()
         {
             var rooms = await _roomService.GetRoomsAsync();
@@ -268,14 +269,21 @@ return CreatedAtAction(nameof(GetRoom), new { id = createdRoom.Id }, createdRoom
             [FromQuery] decimal? minPrice,
             [FromQuery] decimal? maxPrice)
         {
-            if (checkIn >= checkOut)
+            var adjustedCheckIn = checkIn.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(checkIn, DateTimeKind.Utc)
+                : checkIn.ToUniversalTime();
+            var adjustedCheckOut = checkOut.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(checkOut, DateTimeKind.Utc)
+                : checkOut.ToUniversalTime();
+
+            if (adjustedCheckIn >= adjustedCheckOut)
             {
                 return BadRequest(new { message = "Ngày đến phải trước ngày đi" });
             }
 
             try
             {
-                var rooms = await _roomService.GetAvailableRoomsAsync(checkIn, checkOut, roomTypeId, minPrice, maxPrice);
+                var rooms = await _roomService.GetAvailableRoomsAsync(adjustedCheckIn, adjustedCheckOut, roomTypeId, minPrice, maxPrice);
                 return Ok(rooms);
             }
             catch (Exception ex)
@@ -299,14 +307,21 @@ return CreatedAtAction(nameof(GetRoom), new { id = createdRoom.Id }, createdRoom
         [AllowAnonymous]
         public async Task<IActionResult> CreateRoomHold([FromBody] CreateRoomHoldRequest request)
         {
-            if (request.CheckIn >= request.CheckOut)
+            var adjustedCheckIn = request.CheckIn.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(request.CheckIn, DateTimeKind.Utc)
+                : request.CheckIn.ToUniversalTime();
+            var adjustedCheckOut = request.CheckOut.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(request.CheckOut, DateTimeKind.Utc)
+                : request.CheckOut.ToUniversalTime();
+
+            if (adjustedCheckIn >= adjustedCheckOut)
             {
                 return BadRequest(new { message = "Ngày đến phải trước ngày đi" });
             }
 
             try
             {
-                var hold = await _roomService.CreateRoomHoldAsync(request.RoomTypeId, request.CheckIn, request.CheckOut);
+                var hold = await _roomService.CreateRoomHoldAsync(request.RoomTypeId, adjustedCheckIn, adjustedCheckOut);
                 return Ok(hold);
             }
             catch (InvalidOperationException ex)

@@ -26,19 +26,28 @@ namespace HotelBackend.Controllers
             var start = from ?? DateTime.UtcNow.Date.AddDays(-7);
             var end = to?.Date.AddDays(1).AddTicks(-1) ?? DateTime.UtcNow.Date.AddDays(1).AddTicks(-1);
 
-            var report = await _context.Invoices
-                .Where(i => i.CreatedAt >= start && i.CreatedAt <= end)
-                .GroupBy(i => i.CreatedAt.Date)
+            var reportData = await _context.Invoices
+                .Where(i => i.CreatedAt.HasValue && i.CreatedAt.Value >= start && i.CreatedAt.Value <= end)
+                .GroupBy(i => i.CreatedAt!.Value.Date)
                 .Select(g => new
                 {
-                    label = g.Key.ToString("yyyy-MM-dd"),
-                    room = g.Sum(i => i.TotalRoomAmount),
-                    service = g.Sum(i => i.TotalServiceAmount),
-                    damage = g.Sum(i => i.DiscountAmount), // Note: Damage charges not directly available, using discount as placeholder
-                    total = g.Sum(i => i.FinalTotal)
+                    Date = g.Key,
+                    Room = g.Sum(i => i.TotalRoomAmount ?? 0m),
+                    Service = g.Sum(i => i.TotalServiceAmount ?? 0m),
+                    Damage = g.Sum(i => i.TotalDamageAmount ?? 0m),
+                    Total = g.Sum(i => i.FinalTotal ?? 0m)
                 })
-                .OrderBy(r => r.label)
+                .OrderBy(r => r.Date)
                 .ToListAsync();
+
+            var report = reportData.Select(r => new
+            {
+                label = r.Date.ToString("yyyy-MM-dd"),
+                room = r.Room,
+                service = r.Service,
+                damage = r.Damage,
+                total = r.Total
+            });
 
             return Ok(report);
         }

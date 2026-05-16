@@ -49,15 +49,19 @@ namespace HotelBackend.Services
     }
 
     public interface IBookingService
-    {
-        Task<Booking?> GetBookingByCodeAsync(string code);
-        Task<Booking?> GetBookingByIdentifierAsync(string identifier, string type);
-        Task<IEnumerable<Booking>> GetAllBookingsAsync();
-        Task<IEnumerable<RoomType>> SearchAvailableRoomsAsync(DateTime checkIn, DateTime checkOut);
-        Task<Booking> CreateBookingAsync(Booking booking);
-        Task<bool> CheckInAsync(int bookingId, List<int> roomIds);
-        Task<Booking> ConfirmBookingFromHoldAsync(int holdId, Booking bookingData);
-    }
+{
+    Task<Booking?> GetBookingByCodeAsync(string code);
+    Task<Booking?> GetBookingByIdentifierAsync(string identifier, string type);
+    Task<IEnumerable<Booking>> GetAllBookingsAsync();
+    Task<IEnumerable<Booking>> GetCheckedInBookingsAsync();
+    Task<IEnumerable<RoomType>> SearchAvailableRoomsAsync(DateTime checkIn, DateTime checkOut);
+    
+    // Thêm tham số excludeHoldId với giá trị mặc định null
+    Task<Booking> CreateBookingAsync(Booking booking, int? excludeHoldId = null);
+    
+    Task<bool> CheckInAsync(int bookingId, List<int> roomIds);
+    Task<Booking> ConfirmBookingFromHoldAsync(int holdId, Booking bookingData);
+}
 
     public interface IServiceService
     {

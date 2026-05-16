@@ -1,0 +1,43 @@
+# IDEs and Editors
+.idea/
+.vscode/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# OS Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Frontend (hotel-fe)
+hotel-fe/node_modules/
+hotel-fe/build/
+hotel-fe/dist/
+hotel-fe/.env
+hotel-fe/.env.local
+hotel-fe/.env.development.local
+hotel-fe/.env.test.local
+hotel-fe/.env.production.local
+hotel-fe/npm-debug.log*
+hotel-fe/yarn-debug.log*
+hotel-fe/yarn-error.log*
+hotel-fe/.eslintcache
+
+# Backend (.NET / hotel-backend)
+hotel-backend/bin/
+hotel-backend/obj/
+hotel-backend/TestResults/
+hotel-backend/*.user
+hotel-backend/*.suo
+hotel-backend/*.userprefs
+hotel-backend/*.sln.docstates
+hotel-backend/appsettings.Development.json
+
+# Root level
+node_modules/
+bin/
+obj/
+*.log
+.env

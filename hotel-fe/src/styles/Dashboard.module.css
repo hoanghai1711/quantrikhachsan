@@ -1,0 +1,260 @@
+/* Dashboard Component Styles */
+
+.dashboardContainer {
+  padding: 2rem;
+  background: linear-gradient(135deg, #f4f7fc 0%, #eef5ff 100%);
+  min-height: 100vh;
+}
+
+.headerSection {
+  margin-bottom: 3rem;
+  animation: slideInDown 0.4s ease-out;
+}
+
+.pageTitle {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e466e;
+  margin-bottom: 0.5rem;
+  letter-spacing: -0.01em;
+}
+
+.pageSubtitle {
+  color: #6c757d;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* KPI Cards */
+.kpiGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+}
+
+.kpiCard {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  cursor: default;
+}
+
+.kpiCard:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 15px rgba(0, 0, 0, 0.12);
+}
+
+.kpiCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #1e466e, #3d6fa8);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 0);
+}
+
+.kpiIconBox {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  font-size: 1.5rem;
+}
+
+.kpiIconBox.primary {
+  background: rgba(30, 70, 110, 0.1);
+  color: #1e466e;
+}
+
+.kpiIconBox.success {
+  background: rgba(39, 174, 96, 0.1);
+  color: #27ae60;
+}
+
+.kpiIconBox.info {
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+}
+
+.kpiIconBox.warning {
+  background: rgba(243, 156, 18, 0.1);
+  color: #f39c12;
+}
+
+.kpiLabel {
+  color: #6c757d;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.kpiValue {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1e466e;
+  margin-bottom: 0.5rem;
+  line-height: 1;
+}
+
+.kpiSubText {
+  color: #adb5bd;
+  font-size: 0.875rem;
+  margin: 0;
+}
+
+/* Chart Card */
+.chartCard {
+  background: white;
+  border-radius: 12px;
+  padding: 2rem;
+  margin-bottom: 3rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  animation: slideInUp 0.4s ease-out 0.1s both;
+}
+
+.chartHeader {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.chartHeaderTitle {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1e466e;
+  margin: 0;
+}
+
+.chartHeaderIcon {
+  color: #3498db;
+  font-size: 1.5rem;
+}
+
+/* Data Grid */
+.contentGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+}
+
+.dataCard {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  animation: slideInUp 0.4s ease-out 0.2s both;
+}
+
+.dataCardHeader {
+  background: linear-gradient(135deg, #1e466e 0%, #2d5a8c 100%);
+  color: white;
+  padding: 1.5rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.dataCardBody {
+  padding: 1.5rem;
+}
+
+/* Empty State */
+.emptyState {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: #6c757d;
+}
+
+.emptyState svg {
+  width: 80px;
+  height: 80px;
+  opacity: 0.5;
+  margin-bottom: 1rem;
+}
+
+.emptyStateText {
+  font-size: 1.125rem;
+  margin: 0;
+}
+
+/* Loading State */
+.loadingSpinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dashboardContainer {
+    padding: 1rem;
+  }
+
+  .pageTitle {
+    font-size: 1.75rem;
+  }
+
+  .kpiGrid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .contentGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .kpiCard {
+    padding: 1.5rem;
+  }
+}
+
+/* Animations */
+@keyframes slideInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

@@ -11,12 +11,19 @@ export const userService = {
       });
       if (!response.ok) throw new Error('Không thể tải danh sách nhân viên');
       const data = await response.json();
+      
       // Xử lý cả hai trường hợp
+      let usersArray: any[] = [];
       if (data && typeof data === 'object') {
-        if (Array.isArray(data)) return data;
-        if (Array.isArray(data.$values)) return data.$values;
+        if (Array.isArray(data)) usersArray = data;
+        else if (Array.isArray(data.$values)) usersArray = data.$values;
       }
-      return [];
+      
+      // Transform role string to Role enum
+      return usersArray.map(user => ({
+        ...user,
+        role: user.role?.toUpperCase() as Role || Role.GUEST
+      }));
     } catch (error) {
       console.error('Get staff users error:', error);
       throw error;
@@ -33,7 +40,7 @@ export const userService = {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ role: newRole }),
+        body: JSON.stringify({ role: newRole.toLowerCase() }),
       });
 
       if (!response.ok) {
@@ -41,7 +48,11 @@ export const userService = {
         throw new Error(error.message || 'Không thể cập nhật vai trò');
       }
 
-      return await response.json();
+      const userData = await response.json();
+      return {
+        ...userData,
+        role: userData.role?.toUpperCase() as Role || Role.GUEST
+      };
     } catch (error) {
       console.error('Update user role error:', error);
       throw error;

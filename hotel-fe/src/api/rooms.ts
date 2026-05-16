@@ -1,6 +1,6 @@
 import { Room, RoomType, RoomInventory } from '../types';
 
-const API_BASE_URL = 'http://localhost:5002/api';
+const API_BASE_URL = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -87,7 +87,9 @@ export const searchAvailableRooms = async (params: RoomSearchParams): Promise<Ro
     ...(params.maxPrice !== undefined && params.maxPrice >= 0 ? { maxPrice: params.maxPrice.toString() } : {}),
   });
 
-  const res = await fetch(`${API_BASE_URL}/rooms/available?${queryParams.toString()}`);
+  const res = await fetch(`${API_BASE_URL}/rooms/available?${queryParams.toString()}`, {
+    headers: getAuthHeader(),
+  });
   if (!res.ok) {
     const err = await res.text();
     throw new Error(err || `HTTP ${res.status}`);
@@ -98,7 +100,7 @@ export const searchAvailableRooms = async (params: RoomSearchParams): Promise<Ro
   const cleaned = arr.map(item => sanitize<Room>(item)).filter((item): item is Room => item !== null);
   return cleaned.map(item => ({
     id: item.id ?? 0,
-    roomTypeId: item.roomTypeId ?? 0,
+    roomTypeId: Number(item.roomTypeId ?? item.roomType?.id ?? 0),
     roomNumber: item.roomNumber ?? '',
     status: item.status ?? 'Available',
     floor: item.floor ?? 0,
@@ -350,5 +352,32 @@ export const setPrimaryImage = async (imageId: number): Promise<void> => {
   if (!res.ok) {
     const err = await res.json();
     throw new Error(err.message || 'Đặt ảnh chính thất bại');
+  }
+};
+
+export const createRoomHold = async (data: {
+  roomTypeId: number;
+  checkIn: string;
+  checkOut: string;
+}): Promise<any> => {
+  const res = await fetch(`${API_BASE_URL}/rooms/hold`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Tạo hold phòng thất bại');
+  }
+  return res.json();
+};
+
+export const releaseRoomHold = async (holdId: number): Promise<void> => {
+  const res = await fetch(`${API_BASE_URL}/rooms/hold/${holdId}/release`, {
+    method: 'POST',
+  });
+  if (!res.ok) {
+    const err = await res.json();
+    throw new Error(err.message || 'Release hold thất bại');
   }
 };

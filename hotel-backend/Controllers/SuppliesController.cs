@@ -1,11 +1,13 @@
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace HotelBackend.Controllers
 {
     [ApiController]
     [Route("api/supplies")]
+    [Authorize(Roles = "Admin,Manager,Housekeeping")]
     public class SuppliesController : ControllerBase
     {
         private static readonly List<SupplyDto> Supplies = new()

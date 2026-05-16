@@ -208,8 +208,8 @@ const ReviewModeration: React.FC = () => {
                 <tr key={r.id}>
                   <td className="small">{r.id}</td>
                   <td>
-                    <strong>{r.guest_name || 'Ẩn danh'}</strong><br />
-                    <small className="text-muted">{r.guest_email || 'N/A'}</small>
+                    <strong>{r.guestName || 'Ẩn danh'}</strong><br />
+                    <small className="text-muted">{r.guestEmail || 'N/A'}</small>
                   </td>
                   <td>
                     <Badge bg={getRatingColor(r.rating)}>
@@ -224,7 +224,7 @@ const ReviewModeration: React.FC = () => {
                       {r.status === 'Pending' ? 'Chờ' : r.status}
                     </Badge>
                   </td>
-                  <td className="small">{formatDate(r.created_at)}</td>
+                  <td className="small">{formatDate(r.createdAt)}</td>
                   <td>
                     <Button 
                       variant="sm" 
@@ -272,11 +272,11 @@ const ReviewModeration: React.FC = () => {
             <>
               <Form.Group className="mb-3">
                 <Form.Label className="text-muted small">Khách hàng</Form.Label>
-                <div>{selected.guest_name || 'Ẩn danh'}</div>
+                <div>{selected.guestName || 'Ẩn danh'}</div>
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label className="text-muted small">Email</Form.Label>
-                <div>{selected.guest_email || 'N/A'}</div>
+                <div>{selected.guestEmail || 'N/A'}</div>
               </Form.Group>
               <Form.Group className="mb-3">
                 <Form.Label className="text-muted small">Đánh giá</Form.Label>
@@ -298,10 +298,10 @@ const ReviewModeration: React.FC = () => {
                   </Badge>
                 </div>
               </Form.Group>
-              {selected.rejection_reason && (
+              {selected.rejectionReason && (
                 <Form.Group className="mb-3">
                   <Form.Label className="text-muted small">Lý do từ chối</Form.Label>
-                  <div className="bg-danger bg-opacity-10 p-3 rounded text-danger">{selected.rejection_reason}</div>
+                  <div className="bg-danger bg-opacity-10 p-3 rounded text-danger">{selected.rejectionReason}</div>
                 </Form.Group>
               )}
             </>
@@ -319,7 +319,7 @@ const ReviewModeration: React.FC = () => {
         <Modal.Body>
           {selected && (
             <>
-              <p><strong>Khách:</strong> {selected.guest_name || 'Ẩn danh'}</p>
+              <p><strong>Khách:</strong> {selected.guestName || 'Ẩn danh'}</p>
               <p><strong>Đánh giá:</strong> {selected.rating} ⭐</p>
               <p><strong>Nhận xét:</strong> {selected.comment}</p>
               {actionType === 'reject' && (
