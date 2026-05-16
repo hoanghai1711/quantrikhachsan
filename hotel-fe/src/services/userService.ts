@@ -1,12 +1,12 @@
 import { User, Role } from '../types/auth';
 
 // Dùng relative path (proxy)
-const ENDPOINT = '/api';
+const API_BASE_URL = '/api';
 
 export const userService = {
   getStaffUsers: async (): Promise<User[]> => {
     try {
-      const response = await fetch(`${ENDPOINT}/users/staff`, {
+      const response = await fetch(`${API_BASE_URL}/users/staff`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('hotel_token')}` },
       });
       if (!response.ok) throw new Error('Không thể tải danh sách nhân viên');
@@ -34,7 +34,7 @@ export const userService = {
 
   updateUserRole: async (userId: number, newRole: Role): Promise<User> => {
     try {
-      const response = await fetch(`${ENDPOINT}/users/${userId}/role`, {
+      const response = await fetch(`${API_BASE_URL}/users/${userId}/role`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
@@ -61,7 +61,7 @@ export const userService = {
 
   updateRolePermissions: async (role: string, permissions: string[]): Promise<User[]> => {
     try {
-      const response = await fetch(`${ENDPOINT}/roles/${role}/permissions`, {
+      const response = await fetch(`${API_BASE_URL}/roles/${role}/permissions`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,

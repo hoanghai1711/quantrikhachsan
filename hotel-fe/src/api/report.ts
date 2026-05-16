@@ -1,6 +1,6 @@
 import { RevenuePoint } from '../types';
 
-const ENDPOINT = '/api';
+const API_BASE_URL = '/api';
 
 export const getRevenueReport = async (from?: Date, to?: Date): Promise<RevenuePoint[]> => {
   try {
@@ -14,7 +14,7 @@ export const getRevenueReport = async (from?: Date, to?: Date): Promise<RevenueP
     if (from) params.append('from', from.toISOString());
     if (to) params.append('to', to.toISOString());
 
-    const url = `${ENDPOINT}/reports/revenue${params.toString() ? '?' + params.toString() : ''}`;
+    const url = `${API_BASE_URL}/reports/revenue${params.toString() ? '?' + params.toString() : ''}`;
 
     const response = await fetch(url, {
       method: 'GET',

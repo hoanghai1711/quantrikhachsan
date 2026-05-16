@@ -4,7 +4,7 @@ import { FaPlus, FaEdit, FaTrash, FaToggleOn, FaToggleOff, FaSearch, FaCopy } fr
 import { ServiceItem, ServiceCategory } from '../../types';
 import { showToast } from '../../components/common/ToastNotification';
 
-const ENDPOINT = '/api';
+const API_BASE_URL = '/api';
 
 const ServiceManagement: React.FC = () => {
   const [services, setServices] = useState<ServiceItem[]>([]);
@@ -26,7 +26,7 @@ const ServiceManagement: React.FC = () => {
   const loadServices = async () => {
     try {
       setLoading(true);
-      const response = await fetch(`${ENDPOINT}/services`, {
+      const response = await fetch(`${API_BASE_URL}/services`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
         },
@@ -52,7 +52,7 @@ const ServiceManagement: React.FC = () => {
 
   const loadCategories = async () => {
     try {
-      const response = await fetch(`${ENDPOINT}/services/categories`, {
+      const response = await fetch(`${API_BASE_URL}/services/categories`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
         },
@@ -81,7 +81,7 @@ const ServiceManagement: React.FC = () => {
       const serviceData = { name, description, categoryId, price, isActive: true };
 
       if (editing) {
-        const response = await fetch(`${ENDPOINT}/services/${editing.id}`, {
+        const response = await fetch(`${API_BASE_URL}/services/${editing.id}`, {
           method: 'PUT',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
@@ -97,7 +97,7 @@ const ServiceManagement: React.FC = () => {
         setServices(prev => prev.map(s => s.id === editing.id ? { ...s, ...serviceData } : s));
         showToast('success', 'Cập nhật dịch vụ thành công');
       } else {
-        const response = await fetch(`${ENDPOINT}/services`, {
+        const response = await fetch(`${API_BASE_URL}/services`, {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
@@ -132,7 +132,7 @@ const ServiceManagement: React.FC = () => {
       const service = services.find(s => s.id === id);
       if (!service) return;
 
-      const response = await fetch(`${ENDPOINT}/services/${id}/toggle`, {
+      const response = await fetch(`${API_BASE_URL}/services/${id}/toggle`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
@@ -156,7 +156,7 @@ const ServiceManagement: React.FC = () => {
 
     try {
       setLoading(true);
-      const response = await fetch(`${ENDPOINT}/services/${id}`, {
+      const response = await fetch(`${API_BASE_URL}/services/${id}`, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
@@ -186,7 +186,7 @@ const ServiceManagement: React.FC = () => {
         isActive: true,
       };
 
-      const response = await fetch(`${ENDPOINT}/services`, {
+      const response = await fetch(`${API_BASE_URL}/services`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,

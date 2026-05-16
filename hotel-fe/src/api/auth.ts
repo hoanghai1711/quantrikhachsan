@@ -1,10 +1,10 @@
 import { User } from '../types/auth';
 
-const ENDPOINT = '/api';
+const API_BASE_URL = '/api';
 const TOKEN_KEY = 'hotel_token';
 
 export const login = async (email: string, password: string): Promise<{ user: User; token: string }> => {
-  const response = await fetch(`${ENDPOINT}/auth/login`, {
+  const response = await fetch(`${API_BASE_URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password }),
@@ -19,7 +19,7 @@ export const login = async (email: string, password: string): Promise<{ user: Us
 };
 
 export const register = async (email: string, password: string, fullName: string, phone: string): Promise<{ user: User; token: string }> => {
-  const response = await fetch(`${ENDPOINT}/auth/register`, {
+  const response = await fetch(`${API_BASE_URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, password, fullName, phone }),
@@ -36,7 +36,7 @@ export const register = async (email: string, password: string, fullName: string
 export const getCurrentUser = async (): Promise<User | null> => {
   const token = localStorage.getItem(TOKEN_KEY);
   if (!token) return null;
-  const response = await fetch(`${ENDPOINT}/auth/me`, {
+  const response = await fetch(`${API_BASE_URL}/auth/me`, {
     headers: { Authorization: `Bearer ${token}` },
   });
   if (!response.ok) {

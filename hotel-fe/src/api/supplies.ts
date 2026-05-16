@@ -1,7 +1,7 @@
-const ENDPOINT = '/api';
+const API_BASE_URL = '/api';
 
 export const getSupplies = async () => {
-  const response = await fetch(`${ENDPOINT}/supplies`, {
+  const response = await fetch(`${API_BASE_URL}/supplies`, {
     headers: { Authorization: `Bearer ${localStorage.getItem('hotel_token')}` }
   });
   if (!response.ok) throw new Error('Failed to load supplies');

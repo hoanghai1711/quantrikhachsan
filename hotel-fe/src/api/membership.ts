@@ -1,4 +1,4 @@
-const ENDPOINT = '/api';
+const API_BASE_URL = '/api';
 
 export interface Membership {
   id: number;
@@ -20,7 +20,7 @@ export interface Transaction {
 
 export const getMembership = async (): Promise<Membership> => {
   const token = localStorage.getItem('hotel_token');
-  const response = await fetch(`${ENDPOINT}/membership/me`, {
+  const response = await fetch(`${API_BASE_URL}/membership/me`, {
     method: 'GET',
     headers: {
       Authorization: `Bearer ${token}`,
@@ -46,7 +46,7 @@ export const getMembershipTransactions = async (): Promise<Transaction[]> => {
   
   // Khi backend có sẵn endpoint, uncomment đoạn sau:
   // const token = localStorage.getItem('hotel_token');
-  // const response = await fetch(`${ENDPOINT}/membership/transactions`, {
+  // const response = await fetch(`${API_BASE_URL}/membership/transactions`, {
   //   method: 'GET',
   //   headers: {
   //     Authorization: `Bearer ${token}`,

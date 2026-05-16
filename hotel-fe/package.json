@@ -2,7 +2,7 @@
   "name": "hotel-fe",
   "version": "0.1.0",
   "private": true,
-  "proxy": "http://localhost:5002",
+  "proxy": "https://web-final-exam.onrender.com",
   "dependencies": {
     "@headlessui/react": "^2.2.9",
     "@heroicons/react": "^2.2.0",

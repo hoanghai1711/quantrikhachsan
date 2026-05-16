@@ -1,6 +1,6 @@
 import { Booking, BookingService, RoomType, ServiceItem } from '../types';
 
-const ENDPOINT = '/api';
+const API_BASE_URL = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -25,7 +25,7 @@ export interface RoomSearchParams {
 
 export const searchRooms = async (params: RoomSearchParams): Promise<RoomType[]> => {
   try {
-    const response = await fetch(`${ENDPOINT}/rooms/available`, {
+    const response = await fetch(`${API_BASE_URL}/rooms/available`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -56,7 +56,7 @@ export const searchRooms = async (params: RoomSearchParams): Promise<RoomType[]>
 
 export const getBookingByCode = async (code: string): Promise<Booking | null> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/${code}`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/${code}`, {
       headers: getAuthHeader(),
     });
 
@@ -87,7 +87,7 @@ export const getBookingByIdentifier = async (identifier: string, type: 'code' | 
 
 export const getAvailableRoomsForRoomType = async (roomTypeId: number, checkIn: string, checkOut: string): Promise<any[]> => {
   try {
-    const response = await fetch(`${ENDPOINT}/rooms/available/${roomTypeId}?checkIn=${checkIn}&checkOut=${checkOut}`, {
+    const response = await fetch(`${API_BASE_URL}/rooms/available/${roomTypeId}?checkIn=${checkIn}&checkOut=${checkOut}`, {
       headers: getAuthHeader(),
     });
 
@@ -109,7 +109,7 @@ export const createRoomHold = async (payload: {
   checkOut: string;
 }): Promise<any> => {
   try {
-    const response = await fetch(`${ENDPOINT}/rooms/hold`, {
+    const response = await fetch(`${API_BASE_URL}/rooms/hold`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ export const confirmBookingFromHold = async (holdId: number, payload: {
   voucherCode?: string;
 }): Promise<Booking> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/confirm/${holdId}`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/confirm/${holdId}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -181,7 +181,7 @@ export const createBooking = async (payload: {
   };
 
   try {
-    const response = await fetch(`${ENDPOINT}/bookings`, {
+    const response = await fetch(`${API_BASE_URL}/bookings`, {
       method: 'POST',
       headers: {
         ...getAuthHeader(),
@@ -204,7 +204,7 @@ export const createBooking = async (payload: {
 
 export const getBookings = async (): Promise<Booking[]> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings`, {
+    const response = await fetch(`${API_BASE_URL}/bookings`, {
       headers: getAuthHeader(),
     });
 
@@ -222,7 +222,7 @@ export const getBookings = async (): Promise<Booking[]> => {
 
 export const getCheckedInBookings = async (): Promise<Booking[]> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/checked-in`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/checked-in`, {
       headers: getAuthHeader(),
     });
 
@@ -240,7 +240,7 @@ export const getCheckedInBookings = async (): Promise<Booking[]> => {
 
 export const checkIn = async (bookingId: number, roomIds: number[]): Promise<void> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/check-in`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/check-in`, {
       method: 'POST',
       headers: {
         ...getAuthHeader(),
@@ -261,7 +261,7 @@ export const checkIn = async (bookingId: number, roomIds: number[]): Promise<voi
 
 export const checkOut = async (bookingId: number): Promise<void> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/${bookingId}/checkout`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/checkout`, {
       method: 'POST',
       headers: getAuthHeader(),
     });
@@ -278,7 +278,7 @@ export const checkOut = async (bookingId: number): Promise<void> => {
 
 export const createPayment = async (payment: { invoiceId: number; paymentMethod: string; amount: number; transactionId?: string }): Promise<any> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/payments`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/payments`, {
       method: 'POST',
       headers: {
         ...getAuthHeader(),
@@ -303,7 +303,7 @@ export const createMomoPayment = async (
   payment: { amount?: number; orderInfo?: string }
 ): Promise<any> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/${bookingId}/payments/momo`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/payments/momo`, {
       method: 'POST',
       headers: {
         ...getAuthHeader(),
@@ -326,7 +326,7 @@ export const createMomoPayment = async (
 
 export const getInvoice = async (bookingId: number): Promise<any> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/${bookingId}/invoice`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/invoice`, {
       headers: getAuthHeader(),
     });
 
@@ -343,7 +343,7 @@ export const getInvoice = async (bookingId: number): Promise<any> => {
 
 export const createRoomKeyCard = async (bookingId: number, roomId: number): Promise<any> => {
   try {
-    const response = await fetch(`${ENDPOINT}/bookings/${bookingId}/keycard`, {
+    const response = await fetch(`${API_BASE_URL}/bookings/${bookingId}/keycard`, {
       method: 'POST',
       headers: {
         ...getAuthHeader(),
@@ -365,7 +365,7 @@ export const createRoomKeyCard = async (bookingId: number, roomId: number): Prom
 
 export const addServiceToBooking = async (bookingId: number, serviceId: number, quantity: number): Promise<BookingService> => {
   try {
-    const response = await fetch(`${ENDPOINT}/order-services`, {
+    const response = await fetch(`${API_BASE_URL}/order-services`, {
       method: 'POST',
       headers: {
         ...getAuthHeader(),
@@ -388,7 +388,7 @@ export const addServiceToBooking = async (bookingId: number, serviceId: number, 
 
 export const getServiceList = async (): Promise<ServiceItem[]> => {
   try {
-    const response = await fetch(`${ENDPOINT}/services`, {
+    const response = await fetch(`${API_BASE_URL}/services`, {
       headers: getAuthHeader(),
     });
 
@@ -408,7 +408,7 @@ export const getServiceList = async (): Promise<ServiceItem[]> => {
 
 export const getRoomTypeById = async (id: number): Promise<RoomType | null> => {
   try {
-    const response = await fetch(`${ENDPOINT}/rooms/types/${id}`, {
+    const response = await fetch(`${API_BASE_URL}/rooms/types/${id}`, {
       headers: getAuthHeader(),
     });
 
@@ -438,7 +438,7 @@ export const getAvailableRooms = async (typeId: number | null, checkIn: string, 
       queryParams.append('roomTypeId', typeId.toString());
     }
 
-    const response = await fetch(`${ENDPOINT}/rooms/available?${queryParams}`, {
+    const response = await fetch(`${API_BASE_URL}/rooms/available?${queryParams}`, {
       headers: getAuthHeader(),
     });
 
