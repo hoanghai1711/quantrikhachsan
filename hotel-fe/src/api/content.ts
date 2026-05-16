@@ -1,6 +1,6 @@
 import { Article, ArticleCategory, Attraction } from '../types';
 
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -14,7 +14,7 @@ const normalizeApiArray = <T>(data: any): T[] => {
 };
 
 export const getArticleCategories = async (): Promise<ArticleCategory[]> => {
-  const response = await fetch(`${API_BASE_URL}/article-categories`, {
+  const response = await fetch(`${ENDPOINT}/article-categories`, {
     headers: getAuthHeader(),
   });
   if (!response.ok) throw new Error('Không thể tải danh mục bài viết');
@@ -23,7 +23,7 @@ export const getArticleCategories = async (): Promise<ArticleCategory[]> => {
 };
 
 export const getArticles = async (): Promise<Article[]> => {
-  const response = await fetch(`${API_BASE_URL}/articles`, {
+  const response = await fetch(`${ENDPOINT}/articles`, {
     headers: getAuthHeader(),
   });
   if (!response.ok) throw new Error('Không thể tải danh sách bài viết');
@@ -32,7 +32,7 @@ export const getArticles = async (): Promise<Article[]> => {
 };
 
 export const getArticleBySlug = async (slug: string): Promise<Article> => {
-  const response = await fetch(`${API_BASE_URL}/articles/slug/${encodeURIComponent(slug)}`, {
+  const response = await fetch(`${ENDPOINT}/articles/slug/${encodeURIComponent(slug)}`, {
     headers: getAuthHeader(),
   });
   if (response.status === 404) {
@@ -43,7 +43,7 @@ export const getArticleBySlug = async (slug: string): Promise<Article> => {
 };
 
 export const getAttractions = async (): Promise<Attraction[]> => {
-  const response = await fetch(`${API_BASE_URL}/attractions`, {
+  const response = await fetch(`${ENDPOINT}/attractions`, {
     headers: getAuthHeader(),
   });
   if (!response.ok) throw new Error('Không thể tải danh sách điểm đến');

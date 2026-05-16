@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -24,7 +24,7 @@ export interface UpdateRoleRequest {
 
 export const getStaff = async (): Promise<StaffUser[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/staff`, {
+    const response = await fetch(`${ENDPOINT}/users/staff`, {
       headers: getAuthHeader(),
     });
 
@@ -42,7 +42,7 @@ export const getStaff = async (): Promise<StaffUser[]> => {
 
 export const updateUserRole = async (userId: number, roleRequest: UpdateRoleRequest): Promise<StaffUser> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/users/${userId}/role`, {
+    const response = await fetch(`${ENDPOINT}/users/${userId}/role`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',

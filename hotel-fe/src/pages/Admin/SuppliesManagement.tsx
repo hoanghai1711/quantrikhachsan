@@ -36,7 +36,7 @@ interface RoomInventory {
   room?: { id: number; roomNumber?: string };
 }
 
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 const SuppliesManagement: React.FC = () => {
   const [equipments, setEquipments] = useState<Equipment[]>([]);
@@ -90,7 +90,7 @@ const SuppliesManagement: React.FC = () => {
 
   const loadEquipments = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/equipments`, {
+      const response = await fetch(`${ENDPOINT}/equipments`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('hotel_token')}` },
       });
       if (!response.ok) throw new Error('Failed to load equipments');
@@ -114,7 +114,7 @@ const SuppliesManagement: React.FC = () => {
 
   const loadRoomInventory = async (roomId: number) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/room-inventory/room/${roomId}`, {
+      const response = await fetch(`${ENDPOINT}/room-inventory/room/${roomId}`, {
         headers: { 'Authorization': `Bearer ${localStorage.getItem('hotel_token')}` },
       });
       if (!response.ok) throw new Error('Failed to load room inventory');
@@ -129,7 +129,7 @@ const SuppliesManagement: React.FC = () => {
 
   const handleCreateEquipment = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/equipments`, {
+      const response = await fetch(`${ENDPOINT}/equipments`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
@@ -150,7 +150,7 @@ const SuppliesManagement: React.FC = () => {
   const handleUpdateEquipment = async () => {
     if (!editingEquipment) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/equipments/${editingEquipment.id}`, {
+      const response = await fetch(`${ENDPOINT}/equipments/${editingEquipment.id}`, {
         method: 'PUT',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
@@ -172,7 +172,7 @@ const SuppliesManagement: React.FC = () => {
   const handleDeleteEquipment = async (id: number) => {
     if (!window.confirm('Bạn có chắc muốn xóa thiết bị này?')) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/equipments/${id}`, {
+      const response = await fetch(`${ENDPOINT}/equipments/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('hotel_token')}` },
       });
@@ -187,7 +187,7 @@ const SuppliesManagement: React.FC = () => {
   const handleReportDamage = async () => {
     if (!selectedRoomId) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/loss-and-damages`, {
+      const response = await fetch(`${ENDPOINT}/loss-and-damages`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,
@@ -213,7 +213,7 @@ const SuppliesManagement: React.FC = () => {
   const handleDeleteRoomInventory = async (id: number) => {
     if (!window.window.confirm('Bạn có chắc muốn xóa item inventory này?')) return;
     try {
-      const response = await fetch(`${API_BASE_URL}/room-inventory/${id}`, {
+      const response = await fetch(`${ENDPOINT}/room-inventory/${id}`, {
         method: 'DELETE',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('hotel_token')}` },
       });
@@ -227,7 +227,7 @@ const SuppliesManagement: React.FC = () => {
 
   const handleCreateRoomInventory = async () => {
     try {
-      const response = await fetch(`${API_BASE_URL}/room-inventory`, {
+      const response = await fetch(`${ENDPOINT}/room-inventory`, {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,

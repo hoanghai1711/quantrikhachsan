@@ -1,10 +1,10 @@
 import { Booking, PaymentMethod } from '../types';
 
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 export const makePayment = async (bookingId: number, method: PaymentMethod, amount: number): Promise<Booking> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/bookings/payments`, {
+    const response = await fetch(`${ENDPOINT}/bookings/payments`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${localStorage.getItem('hotel_token')}`,

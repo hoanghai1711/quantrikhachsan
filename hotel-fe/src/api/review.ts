@@ -1,6 +1,6 @@
 import { Review } from '../types';
 
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -15,7 +15,7 @@ export interface ReviewStats {
 }
 
 export const getPendingReviews = async (): Promise<Review[]> => {
-  const response = await fetch(`${API_BASE_URL}/reviews/pending`, {
+  const response = await fetch(`${ENDPOINT}/reviews/pending`, {
     headers: getAuthHeader(),
   });
   if (!response.ok) throw new Error('Failed to load reviews');
@@ -26,7 +26,7 @@ export const getPendingReviews = async (): Promise<Review[]> => {
 
 export const createReview = async (review: { bookingId: number; rating: number; comment: string }) => {
   try {
-    const response = await fetch(`${API_BASE_URL}/reviews`, {
+    const response = await fetch(`${ENDPOINT}/reviews`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -50,8 +50,8 @@ export const createReview = async (review: { bookingId: number; rating: number; 
 export const getReviews = async (status?: string): Promise<Review[]> => {
   try {
     const url = status
-      ? `${API_BASE_URL}/reviews?status=${encodeURIComponent(status)}`
-      : `${API_BASE_URL}/reviews`;
+      ? `${ENDPOINT}/reviews?status=${encodeURIComponent(status)}`
+      : `${ENDPOINT}/reviews`;
 
     const response = await fetch(url, {
       credentials: 'include',
@@ -76,7 +76,7 @@ export const getReviews = async (status?: string): Promise<Review[]> => {
 
 export const getReviewById = async (id: number): Promise<Review> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/reviews/${id}`, {
+    const response = await fetch(`${ENDPOINT}/reviews/${id}`, {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
@@ -98,7 +98,7 @@ export const getReviewById = async (id: number): Promise<Review> => {
 
 export const approveReview = async (id: number): Promise<void> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/reviews/${id}/approve`, {
+    const response = await fetch(`${ENDPOINT}/reviews/${id}/approve`, {
       method: 'PUT',
       credentials: 'include',
       headers: {
@@ -122,7 +122,7 @@ export const approveReview = async (id: number): Promise<void> => {
 
 export const rejectReview = async (id: number, rejectionReason: string): Promise<void> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/reviews/${id}/reject`, {
+    const response = await fetch(`${ENDPOINT}/reviews/${id}/reject`, {
       method: 'PUT',
       credentials: 'include',
       headers: {
@@ -151,7 +151,7 @@ export const rejectReview = async (id: number, rejectionReason: string): Promise
 
 export const getReviewStats = async (): Promise<ReviewStats[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/reviews/stats`, {
+    const response = await fetch(`${ENDPOINT}/reviews/stats`, {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',

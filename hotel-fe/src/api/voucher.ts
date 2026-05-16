@@ -1,6 +1,6 @@
 import { Voucher, VoucherType } from '../types';
 
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 export interface CreateVoucherPayload {
   code: string;
@@ -22,7 +22,7 @@ export interface UpdateVoucherPayload {
 }
 
 export const getVouchers = async (): Promise<Voucher[]> => {
-  const response = await fetch(`${API_BASE_URL}/vouchers`, {
+  const response = await fetch(`${ENDPOINT}/vouchers`, {
     headers: { Authorization: `Bearer ${localStorage.getItem('hotel_token')}` }
   });
   if (!response.ok) throw new Error('Failed to load vouchers');
@@ -34,7 +34,7 @@ export const getVouchers = async (): Promise<Voucher[]> => {
 export const getVoucherByCode = async (code: string): Promise<Voucher | null> => {
   try {
     const token = localStorage.getItem('hotel_token');
-    const response = await fetch(`${API_BASE_URL}/vouchers/${code}`, {
+    const response = await fetch(`${ENDPOINT}/vouchers/${code}`, {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
@@ -61,7 +61,7 @@ export const getVoucherByCode = async (code: string): Promise<Voucher | null> =>
 export const createVoucher = async (payload: CreateVoucherPayload): Promise<Voucher> => {
   try {
     const token = localStorage.getItem('hotel_token');
-    const response = await fetch(`${API_BASE_URL}/vouchers`, {
+    const response = await fetch(`${ENDPOINT}/vouchers`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -86,7 +86,7 @@ export const createVoucher = async (payload: CreateVoucherPayload): Promise<Vouc
 export const updateVoucher = async (id: number, payload: UpdateVoucherPayload): Promise<Voucher> => {
   try {
     const token = localStorage.getItem('hotel_token');
-    const response = await fetch(`${API_BASE_URL}/vouchers/${id}`, {
+    const response = await fetch(`${ENDPOINT}/vouchers/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -111,7 +111,7 @@ export const updateVoucher = async (id: number, payload: UpdateVoucherPayload): 
 export const deleteVoucher = async (id: number): Promise<boolean> => {
   try {
     const token = localStorage.getItem('hotel_token');
-    const response = await fetch(`${API_BASE_URL}/vouchers/${id}`, {
+    const response = await fetch(`${ENDPOINT}/vouchers/${id}`, {
       method: 'DELETE',
       headers: {
         'Content-Type': 'application/json',
@@ -134,7 +134,7 @@ export const deleteVoucher = async (id: number): Promise<boolean> => {
 export const bulkImportVouchers = async (vouchers: CreateVoucherPayload[]): Promise<any> => {
   try {
     const token = localStorage.getItem('hotel_token');
-    const response = await fetch(`${API_BASE_URL}/vouchers/bulk-import`, {
+    const response = await fetch(`${ENDPOINT}/vouchers/bulk-import`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

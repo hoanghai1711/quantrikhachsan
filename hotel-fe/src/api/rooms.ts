@@ -1,6 +1,6 @@
 import { Room, RoomType, RoomInventory } from '../types';
 
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -52,7 +52,7 @@ function extractApiBody(data: any): any {
 
 // ========== Room Types ==========
 export const getRoomTypes = async (): Promise<RoomType[]> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/types`, { headers: getAuthHeader() });
+  const res = await fetch(`${ENDPOINT}/rooms/types`, { headers: getAuthHeader() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   const body = extractApiBody(data);
@@ -70,7 +70,7 @@ export interface RoomSearchParams {
 }
 
 export const getRoomTypeById = async (id: number): Promise<RoomType> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/types/${id}`, { headers: getAuthHeader() });
+  const res = await fetch(`${ENDPOINT}/rooms/types/${id}`, { headers: getAuthHeader() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   const cleaned = sanitize<RoomType>(data);
@@ -87,7 +87,7 @@ export const searchAvailableRooms = async (params: RoomSearchParams): Promise<Ro
     ...(params.maxPrice !== undefined && params.maxPrice >= 0 ? { maxPrice: params.maxPrice.toString() } : {}),
   });
 
-  const res = await fetch(`${API_BASE_URL}/rooms/available?${queryParams.toString()}`, {
+  const res = await fetch(`${ENDPOINT}/rooms/available?${queryParams.toString()}`, {
     headers: getAuthHeader(),
   });
   if (!res.ok) {
@@ -110,7 +110,7 @@ export const searchAvailableRooms = async (params: RoomSearchParams): Promise<Ro
 };
 
 export const createRoomType = async (roomType: Omit<RoomType, 'id'>): Promise<RoomType> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/types`, {
+  const res = await fetch(`${ENDPOINT}/rooms/types`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(roomType),
@@ -126,7 +126,7 @@ export const createRoomType = async (roomType: Omit<RoomType, 'id'>): Promise<Ro
 };
 
 export const updateRoomType = async (id: number, roomType: Partial<RoomType>): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/types/${id}`, {
+  const res = await fetch(`${ENDPOINT}/rooms/types/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(roomType),
@@ -138,7 +138,7 @@ export const updateRoomType = async (id: number, roomType: Partial<RoomType>): P
 };
 
 export const deleteRoomType = async (id: number): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/types/${id}`, {
+  const res = await fetch(`${ENDPOINT}/rooms/types/${id}`, {
     method: 'DELETE',
     headers: getAuthHeader(),
   });
@@ -150,7 +150,7 @@ export const deleteRoomType = async (id: number): Promise<void> => {
 
 // ========== Rooms ==========
 export const getRooms = async (): Promise<Room[]> => {
-  const res = await fetch(`${API_BASE_URL}/rooms`, { headers: getAuthHeader() });
+  const res = await fetch(`${ENDPOINT}/rooms`, { headers: getAuthHeader() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   const body = extractApiBody(data);
@@ -168,7 +168,7 @@ export const getRooms = async (): Promise<Room[]> => {
 };
 
 export const getRoomById = async (id: number): Promise<Room> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/${id}`, { headers: getAuthHeader() });
+  const res = await fetch(`${ENDPOINT}/rooms/${id}`, { headers: getAuthHeader() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   const cleaned = sanitize<Room>(data);
@@ -190,7 +190,7 @@ export const createRoom = async (data: {
   status?: string;
   floor: number;
 }): Promise<Room> => {
-  const res = await fetch(`${API_BASE_URL}/rooms`, {
+  const res = await fetch(`${ENDPOINT}/rooms`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(data),
@@ -223,7 +223,7 @@ export const updateRoom = async (id: number, room: {
   status?: string;
   floor: number;
 }): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/${id}`, {
+  const res = await fetch(`${ENDPOINT}/rooms/${id}`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(room),
@@ -235,7 +235,7 @@ export const updateRoom = async (id: number, room: {
 };
 
 export const deleteRoom = async (id: number): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/${id}`, {
+  const res = await fetch(`${ENDPOINT}/rooms/${id}`, {
     method: 'DELETE',
     headers: getAuthHeader(),
   });
@@ -246,7 +246,7 @@ export const deleteRoom = async (id: number): Promise<void> => {
 };
 
 export const updateRoomStatus = async (roomId: number, status: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/${roomId}/status`, {
+  const res = await fetch(`${ENDPOINT}/rooms/${roomId}/status`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify({ status }),
@@ -267,7 +267,7 @@ export interface CreateLossAndDamageRequest {
 }
 
 export const updateRoomCleaningStatus = async (roomId: number, cleaningStatus: string): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/${roomId}/cleaning-status`, {
+  const res = await fetch(`${ENDPOINT}/rooms/${roomId}/cleaning-status`, {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify({ cleaningStatus }),
@@ -279,7 +279,7 @@ export const updateRoomCleaningStatus = async (roomId: number, cleaningStatus: s
 };
 
 export const fetchCleaningRooms = async (): Promise<Room[]> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/cleaning/list`, { headers: getAuthHeader() });
+  const res = await fetch(`${ENDPOINT}/rooms/cleaning/list`, { headers: getAuthHeader() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   const body = extractApiBody(data);
@@ -298,7 +298,7 @@ export const fetchCleaningRooms = async (): Promise<Room[]> => {
 };
 
 export const createLossAndDamage = async (request: CreateLossAndDamageRequest): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/loss-and-damages`, {
+  const res = await fetch(`${ENDPOINT}/loss-and-damages`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify(request),
@@ -310,7 +310,7 @@ export const createLossAndDamage = async (request: CreateLossAndDamageRequest): 
 };
 
 export const fetchRoomInventory = async (roomId: number): Promise<RoomInventory[]> => {
-  const res = await fetch(`${API_BASE_URL}/room-inventory/room/${roomId}`, { headers: getAuthHeader() });
+  const res = await fetch(`${ENDPOINT}/room-inventory/room/${roomId}`, { headers: getAuthHeader() });
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const data = await res.json();
   const arr = toArray<RoomInventory>(data);
@@ -320,7 +320,7 @@ export const fetchRoomInventory = async (roomId: number): Promise<RoomInventory[
 
 // ========== Room Images ==========
 export const addRoomImage = async (roomTypeId: number, imageUrl: string, isPrimary: boolean = false): Promise<any> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/types/${roomTypeId}/images`, {
+  const res = await fetch(`${ENDPOINT}/rooms/types/${roomTypeId}/images`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', ...getAuthHeader() },
     body: JSON.stringify({ imageUrl, isPrimary }),
@@ -334,7 +334,7 @@ export const addRoomImage = async (roomTypeId: number, imageUrl: string, isPrima
 };
 
 export const removeRoomImage = async (imageId: number): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/images/${imageId}`, {
+  const res = await fetch(`${ENDPOINT}/rooms/images/${imageId}`, {
     method: 'DELETE',
     headers: getAuthHeader(),
   });
@@ -345,7 +345,7 @@ export const removeRoomImage = async (imageId: number): Promise<void> => {
 };
 
 export const setPrimaryImage = async (imageId: number): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/images/${imageId}/primary`, {
+  const res = await fetch(`${ENDPOINT}/rooms/images/${imageId}/primary`, {
     method: 'PUT',
     headers: getAuthHeader(),
   });
@@ -360,7 +360,7 @@ export const createRoomHold = async (data: {
   checkIn: string;
   checkOut: string;
 }): Promise<any> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/hold`, {
+  const res = await fetch(`${ENDPOINT}/rooms/hold`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
@@ -373,7 +373,7 @@ export const createRoomHold = async (data: {
 };
 
 export const releaseRoomHold = async (holdId: number): Promise<void> => {
-  const res = await fetch(`${API_BASE_URL}/rooms/hold/${holdId}/release`, {
+  const res = await fetch(`${ENDPOINT}/rooms/hold/${holdId}/release`, {
     method: 'POST',
   });
   if (!res.ok) {

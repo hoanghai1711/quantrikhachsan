@@ -1,4 +1,4 @@
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 export interface RoomInventory {
   id: number;
@@ -36,7 +36,7 @@ const normalizeApiArray = <T>(data: any): T[] => {
 
 export const getRoomInventory = async (roomId: number): Promise<RoomInventory[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/room-inventory/room/${roomId}`, {
+    const response = await fetch(`${ENDPOINT}/room-inventory/room/${roomId}`, {
       headers: getAuthHeader(),
     });
 
@@ -54,7 +54,7 @@ export const getRoomInventory = async (roomId: number): Promise<RoomInventory[]>
 
 export const getRoomTypeInventory = async (roomTypeId: number): Promise<RoomInventory[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/room-inventory/room-type/${roomTypeId}`, {
+    const response = await fetch(`${ENDPOINT}/room-inventory/room-type/${roomTypeId}`, {
       headers: getAuthHeader(),
     });
 
@@ -72,7 +72,7 @@ export const getRoomTypeInventory = async (roomTypeId: number): Promise<RoomInve
 
 export const createRoomInventory = async (inventory: Omit<RoomInventory, 'id'>): Promise<RoomInventory> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/room-inventory`, {
+    const response = await fetch(`${ENDPOINT}/room-inventory`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -103,7 +103,7 @@ export const createRoomInventory = async (inventory: Omit<RoomInventory, 'id'>):
 
 export const updateRoomInventory = async (id: number, inventory: Partial<RoomInventory>): Promise<RoomInventory> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/room-inventory/${id}`, {
+    const response = await fetch(`${ENDPOINT}/room-inventory/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ export const updateRoomInventory = async (id: number, inventory: Partial<RoomInv
 
 export const deleteRoomInventory = async (id: number): Promise<void> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/room-inventory/${id}`, {
+    const response = await fetch(`${ENDPOINT}/room-inventory/${id}`, {
       method: 'DELETE',
       headers: getAuthHeader(),
     });

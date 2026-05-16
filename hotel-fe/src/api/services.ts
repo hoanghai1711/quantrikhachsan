@@ -1,6 +1,6 @@
 import { ServiceItem, ServiceCategory } from '../types';
 
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -15,7 +15,7 @@ const normalizeApiArray = <T>(data: any): T[] => {
 
 export const getServices = async (): Promise<ServiceItem[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/services`, {
+    const response = await fetch(`${ENDPOINT}/services`, {
       headers: getAuthHeader(),
     });
 
@@ -33,7 +33,7 @@ export const getServices = async (): Promise<ServiceItem[]> => {
 
 export const getServiceCategories = async (): Promise<ServiceCategory[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/services/categories`, {
+    const response = await fetch(`${ENDPOINT}/services/categories`, {
       headers: getAuthHeader(),
     });
 
@@ -51,7 +51,7 @@ export const getServiceCategories = async (): Promise<ServiceCategory[]> => {
 
 export const getServiceById = async (id: number): Promise<ServiceItem | null> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/services/${id}`, {
+    const response = await fetch(`${ENDPOINT}/services/${id}`, {
       headers: getAuthHeader(),
     });
 
@@ -72,7 +72,7 @@ export const getServiceById = async (id: number): Promise<ServiceItem | null> =>
 
 export const createService = async (service: Omit<ServiceItem, 'id'>): Promise<ServiceItem> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/services`, {
+    const response = await fetch(`${ENDPOINT}/services`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -95,7 +95,7 @@ export const createService = async (service: Omit<ServiceItem, 'id'>): Promise<S
 
 export const updateService = async (id: number, service: Partial<ServiceItem>): Promise<void> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/services/${id}`, {
+    const response = await fetch(`${ENDPOINT}/services/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -116,7 +116,7 @@ export const updateService = async (id: number, service: Partial<ServiceItem>): 
 
 export const deleteService = async (id: number): Promise<void> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/services/${id}`, {
+    const response = await fetch(`${ENDPOINT}/services/${id}`, {
       method: 'DELETE',
       headers: getAuthHeader(),
     });
@@ -133,7 +133,7 @@ export const deleteService = async (id: number): Promise<void> => {
 
 export const toggleServiceStatus = async (id: number): Promise<void> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/services/${id}/toggle`, {
+    const response = await fetch(`${ENDPOINT}/services/${id}/toggle`, {
       method: 'PUT',
       headers: getAuthHeader(),
     });
@@ -154,7 +154,7 @@ export const createOrderService = async (
   quantity: number
 ): Promise<any> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/order-services`, {
+    const response = await fetch(`${ENDPOINT}/order-services`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

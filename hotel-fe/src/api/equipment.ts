@@ -1,6 +1,6 @@
 import { Equipment } from '../types';
 
-const API_BASE_URL = '/api';
+const ENDPOINT = '/api';
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('hotel_token');
@@ -39,7 +39,7 @@ export interface StockUpdateRequest {
 
 export const getEquipments = async (): Promise<EquipmentDetail[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/equipments`, {
+    const response = await fetch(`${ENDPOINT}/equipments`, {
       headers: getAuthHeader(),
     });
 
@@ -57,7 +57,7 @@ export const getEquipments = async (): Promise<EquipmentDetail[]> => {
 
 export const getEquipmentById = async (id: number): Promise<EquipmentDetail | null> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/equipments/${id}`, {
+    const response = await fetch(`${ENDPOINT}/equipments/${id}`, {
       headers: getAuthHeader(),
     });
 
@@ -78,7 +78,7 @@ export const getEquipmentById = async (id: number): Promise<EquipmentDetail | nu
 
 export const createEquipment = async (equipment: Omit<EquipmentDetail, 'id'>): Promise<EquipmentDetail> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/equipments`, {
+    const response = await fetch(`${ENDPOINT}/equipments`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ export const createEquipment = async (equipment: Omit<EquipmentDetail, 'id'>): P
 
 export const updateEquipment = async (id: number, equipment: Partial<EquipmentDetail>): Promise<EquipmentDetail> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/equipments/${id}`, {
+    const response = await fetch(`${ENDPOINT}/equipments/${id}`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
@@ -124,7 +124,7 @@ export const updateEquipment = async (id: number, equipment: Partial<EquipmentDe
 
 export const deleteEquipment = async (id: number): Promise<void> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/equipments/${id}`, {
+    const response = await fetch(`${ENDPOINT}/equipments/${id}`, {
       method: 'DELETE',
       headers: getAuthHeader(),
     });
@@ -141,7 +141,7 @@ export const deleteEquipment = async (id: number): Promise<void> => {
 
 export const updateEquipmentStock = async (id: number, request: StockUpdateRequest): Promise<EquipmentDetail> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/equipments/${id}/stock`, {
+    const response = await fetch(`${ENDPOINT}/equipments/${id}/stock`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
